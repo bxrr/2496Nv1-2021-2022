@@ -5,4 +5,4 @@
   #define MID_RIGHT_PORT 5
   #define FRONT_RIGHT_PORT 6
 
-  #define IMU_PORT 7
+  #define INERT_PORT 7

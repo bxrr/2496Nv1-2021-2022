@@ -1,10 +1,10 @@
 #include "main.h"
 #include "chassis.h"
 
-#include "port_defines.h"
+#include "ports.h"
 
 Chassis chas;
-pros::Imu inert(IMU_PORT);
+pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
 void initialize()
