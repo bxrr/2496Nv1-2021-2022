@@ -1,9 +1,9 @@
 #include "main.h"
 #include "chassis.h"
-
 #include "ports.h"
 
 Chassis chas;
+pros::ADIAnalogIn pneu(PNEUMATIC_PORT); // pneumatic code: pneu.set_value(true/false);
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
@@ -21,12 +21,12 @@ void drive(int targetPos, driveDirection dir=FORWARD) // Need to implement inert
 	int leftStartPos = chas.getLeftPos();
 	int rightStartPos = chas.getRightPos();
 
-	// Distance error: motor encoding + P
+	// Distance error: motor encoding and P
 	double distError;
 	double currentPos = 0.0;
 	float distKp = 0.2;
 
-	// Drive straight stuff: intertial + PID
+	// Drive straight stuff: inertial and PID
 	double initialRotation = inert.get_rotation();
 	double lastError, derivative;
 	double error = 0.0;

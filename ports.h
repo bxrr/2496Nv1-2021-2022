@@ -6,3 +6,5 @@
 #define FRONT_RIGHT_PORT 6
 
 #define INERT_PORT 7
+
+#define PNEUMATIC_PORT 'A'
