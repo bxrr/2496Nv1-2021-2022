@@ -27,14 +27,14 @@ public:
      if(unit == VOLT)
      {
          backLeft.move(speed);
-         midLeft.move(speed);
-         frontLeft.move(speed);
+         midLeft.move(-speed);
+         frontLeft.move(-speed);
      }
      else
      {
          backLeft.move(speed * 127 / 100);
-         midLeft.move(speed * 127 / 100);
-         frontLeft.move(speed * 127 / 100);
+         midLeft.move(-1 * (speed * 127 / 100));
+         frontLeft.move(-1 * (speed * 127 / 100));
      }
   }
 
@@ -42,13 +42,13 @@ public:
   {
      if(unit == VOLT)
      {
-         backRight.move(speed);
+         backRight.move(-speed);
          midRight.move(speed);
          frontRight.move(speed);
      }
      else
      {
-         backRight.move(speed * 127 / 100);
+         backRight.move(-1 * (speed * 127 / 100));
          midRight.move(speed * 127 / 100);
          frontRight.move(speed * 127 / 100);
      }

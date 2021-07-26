@@ -3,13 +3,15 @@
 #include "ports.h"
 
 Chassis chas;
-pros::ADIAnalogIn pneu(PNEUMATIC_PORT); // pneumatic code: pneu.set_value(true/false);
+pros::ADIAnalogOut pneu(PNEUMATIC_PORT); // pneumatic code: pneu.set_value(true/false);
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
 void initialize()
 {
+	pros::lcd::initialize();
 	inert.reset();
+	pros::lcd::print(1, "Initialized");
 }
 
 // auton functions =============================================================
@@ -74,8 +76,8 @@ void arcadeDrive()
 {
     if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 3 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 3)
     {
-		chas.brakeCoast();
-        chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) * 0.5);
+				chas.brakeCoast();
+      	chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) * 0.5);
         chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) * 0.5);
     }
     else
@@ -88,7 +90,7 @@ void tankDrive()
 {
     if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 3 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)) > 3)
     {
-		chas.brakeCoast();
+				chas.brakeCoast();
         chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
         chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
     }
@@ -100,12 +102,18 @@ void tankDrive()
 
 // main function
 void opcontrol() {
-	while(inert.is_calibrating())  // Check if the intertial sensor is calibrating before doing anything
-	{
-		pros::delay(5);
-	}
+	pros::lcd::print(2, "Running Op Control");
+	while (true)
+	{ // Drive loop (there's an arcadeDrive() function and tankDrive() function.
+		tankDrive();
 
-	while (true) { // Drive loop (there's an arcadeDrive() function and tankDrive() function.
-		arcadeDrive();
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+		{
+			pneu.set_value(true);
+		}
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+		{
+			pneu.set_value(false);
+		}
 	}
 }
