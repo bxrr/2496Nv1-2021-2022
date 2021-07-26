@@ -60,7 +60,7 @@ void rotate(int degrees, rotateDirection dir=CW)
 
 }
 
-// main auton function
+// main auton functionL
 void autonomous()
 {
 	while(inert.is_calibrating()) // Check if the intertial sensor is calibrating before doing anything
