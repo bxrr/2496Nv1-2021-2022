@@ -10,8 +10,9 @@ pros::Controller con(pros::E_CONTROLLER_MASTER);
 
 void initialize()
 {
-	inert.reset();
 	pros::lcd::initialize();
+	inert.reset();
+	pros::lcd::print(1, "Initialized");
 }
 
  // auton functions =============================================================

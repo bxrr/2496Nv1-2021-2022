@@ -32,7 +32,7 @@ public:
      }
      else
      {
-         backLeft.move(-speed * 127 / 100);
+         backLeft.move(speed * 127 / 100);
          midLeft.move(-speed * 127 / 100);
          frontLeft.move(-speed * 127 / 100);
      }
