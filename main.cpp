@@ -1,12 +1,12 @@
 #include "main.h"
 #include "chassis.h"
-#include <iostream>
+#include "piston.h"
 #include "ports.h"
 
 Chassis chas;
+Piston pneu;
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
-pros::ADIDigitalOut pneu(PNEUMATIC_PORT);
 
 void initialize()
 {
@@ -18,8 +18,6 @@ void initialize()
  enum driveDirection {FORWARD, BACKWARD};
  void drive(int targetPos, driveDirection dir=FORWARD) // Need to implement inertial for straight driving
  {
-	   chas.brakeCoast();
-
      int leftStartPos = chas.getLeftPos();
      int rightStartPos = chas.getRightPos();
 
@@ -39,7 +37,7 @@ void initialize()
 		 float kD = 0.03;
 
 		 // Drive loop, might add a timeout thing if it's needed
-     while(currentPos < targetPos - 5)
+     while(currentPos < targetPos)
      {
 			 distError = targetPos - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
 
@@ -48,18 +46,30 @@ void initialize()
 			 integral += error;
 			 derivative = error - lastError;
 
-			 double rightSpeed = distError * distKp;
-			 double leftSpeed = rightSpeed + (error * kP) + (integral * kI) + (derivative * kD);
-
-			 chas.spinLeft(leftSpeed);
-			 chas.spinRight(rightSpeed);
+			 chas.spinLeft((distError * distKp) + (error * kP) + (integral * kI) + (derivative * kD));
+			 chas.spinRight(distError * distKp);
      }
+		 chas.spinLeft(0);
+		 chas.spinRight(0);
  }
 
  enum rotateDirection {CW, CCW};
  void rotate(int degrees, rotateDirection dir=CW)
  {
+	 double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
+	 double currentRotation = inert.get_rotation();
+	 double error = targetRotation - currentRotation;
 
+	 float kP = 0.1;
+
+	 while(currentRotation < targetRotation)
+	 {
+		 currentRotation = inert.get_rotation();
+		 error = targetRotation - currentRotation;
+
+		 chas.spinLeft((dir == CW) ? (1) : (-1) * error * kP);
+		 chas.spinRight((dir == CW) ? (-1) : (1) * error * kP);
+	 }
  }
 
 // main auton function
@@ -74,46 +84,49 @@ void autonomous()
 // driver control functions ====================================================
 void arcadeDrive()
 {
-    if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 3 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 3)
+    if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
     {
-				chas.brakeCoast();
-        chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) * 0.5);
-        chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X) * 0.5);
+        chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+        chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
     }
     else
     {
-        chas.brakeHold();
+        chas.stop();
     }
 }
 
 void tankDrive()
 {
-    if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 3 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)) > 3)
+    if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)) > 10)
     {
-			  chas.brakeCoast();
         chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
         chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
     }
     else
     {
-        chas.brakeHold();
+				chas.spinLeft(0);
+				chas.spinRight(0);
+        chas.stop();
     }
 }
 
 // main function
 void opcontrol()
 {
-	pros::lcd::set_text(2, "Currently Running. ");
+	pros::lcd::set_text(1, "opcontrol() is running.");
 
-	while (true) { // Drive loop (there's an arcadeDrive() function and tankDrive() function.
+	while (true)
+	{ // Drive loop (there's an arcadeDrive() function and tankDrive() function.
+		arcadeDrive();
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 		{
-			pneu.set_value(true);
+			pneu.toggle();
 		}
-		else
+
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_B))
 		{
-			pneu.set_value(false);
+			break; // Temporary exit code emergency button
 		}
-		pros::delay(5);
+		pros::delay(10);
 	}
 }

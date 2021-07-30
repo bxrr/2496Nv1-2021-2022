@@ -27,14 +27,14 @@ public:
      if(unit == VOLT)
      {
          backLeft.move(speed);
-         midLeft.move(speed);
-         frontLeft.move(speed);
+         midLeft.move(-speed);
+         frontLeft.move(-speed);
      }
      else
      {
-         backLeft.move(speed * 127 / 100);
-         midLeft.move(speed * 127 / 100);
-         frontLeft.move(speed * 127 / 100);
+         backLeft.move(-speed * 127 / 100);
+         midLeft.move(-speed * 127 / 100);
+         frontLeft.move(-speed * 127 / 100);
      }
   }
 
@@ -42,37 +42,23 @@ public:
   {
      if(unit == VOLT)
      {
-         backRight.move(speed);
+         backRight.move(-speed);
          midRight.move(speed);
          frontRight.move(speed);
      }
      else
      {
-         backRight.move(speed * 127 / 100);
+         backRight.move(-speed * 127 / 100);
          midRight.move(speed * 127 / 100);
          frontRight.move(speed * 127 / 100);
      }
   }
 
   // Change brake type =========================================================
-  void brakeHold()
+  void stop()
   {
-     backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-     midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-     frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-     backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-     midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-     frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-  }
-
-  void brakeCoast()
-  {
-    backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    backRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+     spinLeft(0);
+     spinRight(0);
   }
 
   // Motor position functions ==================================================
