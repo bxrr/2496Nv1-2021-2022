@@ -5,9 +5,9 @@ class Piston // pneumatic class
 {
 private:
     pros::ADIDigitalOut pneu;
-    bool extended = false;
+    bool extended;
 public:
-    Piston() : pneu(PNEUMATIC_PORT) {}
+    Piston() : pneu(PNEUMATIC_PORT), extended(false) {}
 
     // general methods
     void toggle()

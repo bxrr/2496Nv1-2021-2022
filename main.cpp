@@ -5,17 +5,19 @@
 
 Chassis chas;
 Piston pneu;
+pros::Motor backLift(17, pros::E_MOTOR_GEARSET_18, false);
+
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
 // misc functions ==============================================================
-bool checkIntertial(int lineNum=1)
+void checkInertial(int lineNum=1)
 {
-	while(inert.is_calibrating)
+	while(inert.is_calibrating())
 	{
 		if(pros::lcd::is_initialized())
 		{
-			pros::lcd::print(lineNum, "inertial is calibrating...")
+			pros::lcd::print(lineNum, "inertial is calibrating...");
 		}
 	}
 	if(pros::lcd::is_initialized())
@@ -74,7 +76,7 @@ void rotate(int degrees, rotateDirection dir=CW)
 	double currentRotation = inert.get_rotation();
 	double error = targetRotation - currentRotation;
 
-	float kP = 0.1;
+	float kP = 0.5;
 
 	while(currentRotation < targetRotation)
 	{
@@ -89,7 +91,7 @@ void rotate(int degrees, rotateDirection dir=CW)
 // main auton function
 void autonomous()
 {
-	checkInertial();
+
 }
 
 // driver control functions ====================================================
@@ -102,7 +104,7 @@ void arcadeDrive()
 	}
 	else
 	{
-		
+		chas.stop();
 	}
 }
 
@@ -115,8 +117,6 @@ void tankDrive()
 	}
 	else
 	{
-		chas.spinLeft(0);
-		chas.spinRight(0);
 		chas.stop();
 	}
 }
@@ -125,26 +125,35 @@ void tankDrive()
 void initialize()
 {
 	pros::lcd::initialize();
-	inert.reset();
-	pros::lcd::print(1, "Initialized");
 }
+
+void disabled() {}
+
+void competition_initialize() {}
 
 void opcontrol()
 {
-	checkInertial();
-	pros::lcd::set_text(1, "opcontrol() is running.");
-
+	pros::lcd::set_text(1, "opcontrol is running");
 	while (true)
 	{ 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		{
+			backLift.move(127);
+		}
+		else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		{
+			backLift.move(-127);
+		}
+		else
+		{
+			backLift.move_velocity(0);
+			backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+		}
+
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 		{
 			pneu.toggle();
-		}
-
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_B))
-		{
-			break; // Temporary exit code emergency button
 		}
 		pros::delay(10);
 	}
