@@ -8,6 +8,120 @@ Piston pneu;
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
+// misc functions ==============================================================
+bool checkIntertial(int lineNum=1)
+{
+	while(inert.is_calibrating)
+	{
+		if(pros::lcd::is_initialized())
+		{
+			pros::lcd::print(lineNum, "inertial is calibrating...")
+		}
+	}
+	if(pros::lcd::is_initialized())
+	{
+		pros::lcd::clear_line(lineNum);
+	}
+}
+
+// auton functions =============================================================
+enum driveDirection {FORWARD, BACKWARD};
+void drive(int targetEnc, driveDirection dir=FORWARD)
+{
+	// Drive distance variables: uses motor encodings with distance error
+	int leftStartPos = chas.getLeftPos();
+	int rightStartPos = chas.getRightPos();
+
+	double distError;
+	double currentPos = 0.0;
+	float distKp = 0.2;
+
+	// Drive straight variables: uses the intertial with PID
+	double initialRotation = inert.get_rotation();
+	double lastError, derivative;
+	double error = 0.0;
+	double integral = 0.0;
+
+	float kP = 0.2;
+	float kI = 0.07;
+	float kD = 0.03;
+
+	// Drive loop, might add a timeout thing if it's needed
+	while(currentPos < targetEnc)
+	{
+		// Drive code: Distance error set to target encoding - average of left + right encodings
+		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
+
+		// Drive straight code: Changes left side of the chassis' speed according to the motor encodings of the left and right sides of the chassis
+		lastError = error;
+		error = initialRotation - inert.get_rotation();
+		integral += error;
+		derivative = error - lastError;
+
+		// Apply speeds
+		chas.spinLeft((distError * distKp) + (error * kP) + (integral * kI) + (derivative * kD));
+		chas.spinRight(distError * distKp);
+	}
+	// Stop robot after loop
+	chas.spinLeft(0);
+	chas.spinRight(0);
+}
+
+enum rotateDirection {CW, CCW};
+void rotate(int degrees, rotateDirection dir=CW)
+{   // Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
+	double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
+	double currentRotation = inert.get_rotation();
+	double error = targetRotation - currentRotation;
+
+	float kP = 0.1;
+
+	while(currentRotation < targetRotation)
+	{
+		currentRotation = inert.get_rotation();
+		error = targetRotation - currentRotation;
+
+		chas.spinLeft((dir == CW) ? (1) : (-1) * error * kP);
+		chas.spinRight((dir == CW) ? (-1) : (1) * error * kP);
+	}
+}
+
+// main auton function
+void autonomous()
+{
+	checkInertial();
+}
+
+// driver control functions ====================================================
+void arcadeDrive()
+{
+	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
+	{
+		chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+		chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+	}
+	else
+	{
+		
+	}
+}
+
+void tankDrive()
+{
+	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)) > 10)
+	{
+		chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+		chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+	}
+	else
+	{
+		chas.spinLeft(0);
+		chas.spinRight(0);
+		chas.stop();
+	}
+}
+
+// main control functions ======================================================
 void initialize()
 {
 	pros::lcd::initialize();
@@ -15,109 +129,13 @@ void initialize()
 	pros::lcd::print(1, "Initialized");
 }
 
- // auton functions =============================================================
- enum driveDirection {FORWARD, BACKWARD};
- void drive(int targetPos, driveDirection dir=FORWARD) // Need to implement inertial for straight driving
- {
-     int leftStartPos = chas.getLeftPos();
-     int rightStartPos = chas.getRightPos();
-
-		 // Distance error: motor encoding + P
-		 double distError;
-		 double currentPos = 0.0;
-		 float distKp = 0.2;
-
-		 // Drive straight stuff: intertial + PID
-		 double initialRotation = inert.get_rotation();
-     double lastError, derivative;
-     double error = 0.0;
-     double integral = 0.0;
-
-		 float kP = 0.2;
-		 float kI = 0.07;
-		 float kD = 0.03;
-
-		 // Drive loop, might add a timeout thing if it's needed
-     while(currentPos < targetPos)
-     {
-			 distError = targetPos - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
-
-			 lastError = error;
-			 error = initialRotation - inert.get_rotation();
-			 integral += error;
-			 derivative = error - lastError;
-
-			 chas.spinLeft((distError * distKp) + (error * kP) + (integral * kI) + (derivative * kD));
-			 chas.spinRight(distError * distKp);
-     }
-		 chas.spinLeft(0);
-		 chas.spinRight(0);
- }
-
- enum rotateDirection {CW, CCW};
- void rotate(int degrees, rotateDirection dir=CW)
- {
-	 double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
-	 double currentRotation = inert.get_rotation();
-	 double error = targetRotation - currentRotation;
-
-	 float kP = 0.1;
-
-	 while(currentRotation < targetRotation)
-	 {
-		 currentRotation = inert.get_rotation();
-		 error = targetRotation - currentRotation;
-
-		 chas.spinLeft((dir == CW) ? (1) : (-1) * error * kP);
-		 chas.spinRight((dir == CW) ? (-1) : (1) * error * kP);
-	 }
- }
-
-// main auton function
-void autonomous()
-{
-	while(inert.is_calibrating()) // Check if the intertial sensor is calibrating before doing anything
-	{
-		pros::delay(5);
-	}
-}
-
-// driver control functions ====================================================
-void arcadeDrive()
-{
-    if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
-    {
-        chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-        chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-    }
-    else
-    {
-        chas.stop();
-    }
-}
-
-void tankDrive()
-{
-    if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)) > 10)
-    {
-        chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-        chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
-    }
-    else
-    {
-				chas.spinLeft(0);
-				chas.spinRight(0);
-        chas.stop();
-    }
-}
-
-// main function
 void opcontrol()
 {
+	checkInertial();
 	pros::lcd::set_text(1, "opcontrol() is running.");
 
 	while (true)
-	{ // Drive loop (there's an arcadeDrive() function and tankDrive() function.
+	{ 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 		{

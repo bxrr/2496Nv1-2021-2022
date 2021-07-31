@@ -4,28 +4,28 @@
 class Piston // pneumatic class
 {
 private:
-  pros::ADIDigitalOut pneu;
-  bool extended = false;
+    pros::ADIDigitalOut pneu;
+    bool extended = false;
 public:
-  Piston() : pneu(PNEUMATIC_PORT) {}
+    Piston() : pneu(PNEUMATIC_PORT) {}
 
-  // general methods
-  void toggle()
-  {
-    if(extended)
+    // general methods
+    void toggle()
     {
-      extended = false;
-      pneu.set_value(extended);
+        if(extended)
+        {
+            extended = false;
+            pneu.set_value(extended);
+        }
+        else
+        {
+            extended = true;
+            pneu.set_value(extended);
+        }
     }
-    else
-    {
-      extended = true;
-      pneu.set_value(extended);
-    }
-  }
 
-  bool status()
-  {
-    return extended;
-  }
+    bool status()
+    {
+        return extended;
+    }
 };
