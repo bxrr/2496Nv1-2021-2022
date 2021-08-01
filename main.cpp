@@ -30,15 +30,15 @@ void checkInertial(int lineNum=1)
 enum driveDirection {FORWARD, BACKWARD};
 void drive(int targetEnc, driveDirection dir=FORWARD)
 {
-	// Drive distance variables: uses motor encodings with distance error and integral
+	// Drive distance variables: uses motor encodings with distance error
 	int leftStartPos = chas.getLeftPos();
 	int rightStartPos = chas.getRightPos();
 
-	double distError = 0;
-	double distIntegral = 0;
+	double distError = 0.0;
 	double currentPos = 0.0;
+	double baseSpeed = 0.0;
+
 	float distKp = 0.1;
-	float distKi = 0.0005;
 
 	// Drive straight variables: uses the intertial with PID
 	double initialRotation = inert.get_rotation();
@@ -55,18 +55,17 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 	{
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
-		distError = (distError > 100) ? (100) : (distError);
-		distIntegral += distError;
+		baseSpeed = (distError * distKp > 5) ? (distError * distKp) : 5; // If the base speed is below 5, set the base speed to 5.
 
-		// Drive straight code: Changes left side of the chassis' speed according to the motor encodings of the left and right sides of the chassis
+		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 		lastError = error;
 		error = initialRotation - inert.get_rotation();
 		integral += error;
 		derivative = error - lastError;
 
 		// Apply speeds
-		chas.spinLeft((distError * distKp + distIntegral * distKi) + (error * kP) + (integral * kI) + (derivative * kD));
-		chas.spinRight(distError * distKp + distIntegral * distKi);
+		chas.spinLeft((baseSpeed) + (error * kP) + (integral * kI) + (derivative * kD));
+		chas.spinRight(baseSpeed);
 	}
 	// Stop robot after loop
 	chas.spinLeft(0);
@@ -75,23 +74,22 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 
 enum rotateDirection {CW, CCW};
 void rotate(int degrees, rotateDirection dir=CW)
-{   // Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error and integral
+{   // Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
 	double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
 	double currentRotation = inert.get_rotation();
 	double error = targetRotation - currentRotation;
-	double integral = 0;
+	double baseSpeed = 0.0;
 
-	float kP = 0.5;
-	float kI = 0.002;
+	float kP = 0.7;
 
 	while(currentRotation < targetRotation)
 	{
 		currentRotation = inert.get_rotation();
 		error = targetRotation - currentRotation;
-		integral += error;
+		baseSpeed = (error * kP > 3.5) ? (error * kP) : (3.5);
 
-		chas.spinLeft( ((dir == CW) ? (1) : (-1)) * (error * kP) * (integral * kI) );
-		chas.spinRight( ((dir == CW) ? (-1) : (1)) * (error * kP) * (integral * kI) );
+		chas.spinLeft(((dir == CW) ? (1) : (-1)) * baseSpeed);
+		chas.spinRight(((dir == CW) ? (-1) : (1)) * baseSpeed);
 	}
 }
 
