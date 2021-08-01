@@ -34,7 +34,8 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 	int leftStartPos = chas.getLeftPos();
 	int rightStartPos = chas.getRightPos();
 
-	double distError;
+	double distError = 0;
+	double distIntegral = 0;
 	double currentPos = 0.0;
 	float distKp = 0.1;
 	float distKi = 0.0005;
@@ -54,6 +55,8 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 	{
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
+		distError = (distError > 100) ? (100) : (distError);
+		distIntegral += distError;
 
 		// Drive straight code: Changes left side of the chassis' speed according to the motor encodings of the left and right sides of the chassis
 		lastError = error;
@@ -62,8 +65,8 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 		derivative = error - lastError;
 
 		// Apply speeds
-		chas.spinLeft((distError * distKp) + (error * kP) + (integral * kI) + (derivative * kD));
-		chas.spinRight(distError * distKp);
+		chas.spinLeft((distError * distKp + distIntegral * distKi) + (error * kP) + (integral * kI) + (derivative * kD));
+		chas.spinRight(distError * distKp + distIntegral * distKi);
 	}
 	// Stop robot after loop
 	chas.spinLeft(0);
@@ -87,8 +90,8 @@ void rotate(int degrees, rotateDirection dir=CW)
 		error = targetRotation - currentRotation;
 		integral += error;
 
-		chas.spinLeft(((dir == CW) ? (1) : (-1) * error * kP) * integral * kI);
-		chas.spinRight(((dir == CW) ? (-1) : (1) * error * kP) * integral * kI);
+		chas.spinLeft( ((dir == CW) ? (1) : (-1)) * (error * kP) * (integral * kI) );
+		chas.spinRight( ((dir == CW) ? (-1) : (1)) * (error * kP) * (integral * kI) );
 	}
 }
 
