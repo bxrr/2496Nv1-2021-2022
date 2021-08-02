@@ -28,11 +28,11 @@ void checkInertial(int lineNum=1)
 
 // auton functions =============================================================
 enum driveDirection {FORWARD, BACKWARD};
-void drive(int targetEnc, driveDirection dir=FORWARD)
+void drive(double targetEnc, driveDirection dir=FORWARD)
 {
 	// Drive distance variables: uses motor encodings with distance error
-	int leftStartPos = chas.getLeftPos();
-	int rightStartPos = chas.getRightPos();
+	double leftStartPos = chas.getLeftPos();
+	double rightStartPos = chas.getRightPos();
 
 	double distError = 0.0;
 	double currentPos = 0.0;
@@ -55,7 +55,7 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 	{
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
-		baseSpeed = (distError * distKp > 5) ? (distError * distKp) : 5; // If the base speed is below 5, set the base speed to 5.
+		baseSpeed = (distError * distKp > 3.5) ? (distError * distKp) : 3.5; // If the base speed is below 3.5, set the base speed to 3.5
 
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 		lastError = error;
@@ -68,17 +68,16 @@ void drive(int targetEnc, driveDirection dir=FORWARD)
 		chas.spinRight(baseSpeed);
 	}
 	// Stop robot after loop
-	chas.spinLeft(0);
-	chas.spinRight(0);
+	chas.stop();
 }
 
-enum rotateDirection {CW, CCW};
-void rotate(int degrees, rotateDirection dir=CW)
+enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
+void rotate(double degrees, rotateDirection dir=CW)
 {   // Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
 	double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
 	double currentRotation = inert.get_rotation();
 	double error = targetRotation - currentRotation;
-	double baseSpeed = 0.0;
+	double speed = 0.0;
 
 	float kP = 0.7;
 
@@ -86,17 +85,21 @@ void rotate(int degrees, rotateDirection dir=CW)
 	{
 		currentRotation = inert.get_rotation();
 		error = targetRotation - currentRotation;
-		baseSpeed = (error * kP > 3.5) ? (error * kP) : (3.5);
+		speed = (error * kP > 3.5) ? (error * kP) : (3.5);
 
-		chas.spinLeft(((dir == CW) ? (1) : (-1)) * baseSpeed);
-		chas.spinRight(((dir == CW) ? (-1) : (1)) * baseSpeed);
+		chas.spinLeft(speed);
+		chas.spinRight(speed);
 	}
+	chas.stop();
 }
 
 // main auton function
 void autonomous()
 {
-
+	// drive(180.0); // go forward 1 wheel revolution (no 2nd parameter defaults to FORWARD)
+	// drive(180.0, BACKWARD);
+	// rotate(90.0); // 2nd parameter defaults to clockwise
+	// rotate(90.0, CCW);
 }
 
 // driver control functions ====================================================
@@ -126,7 +129,7 @@ void tankDrive()
 	}
 }
 
-// Lifts
+// lifts
 void backLiftControl()
 {
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
@@ -145,7 +148,7 @@ void backLiftControl()
 }
 
 // pneumatic
-void controlPneumatic()
+void pneumaticControl()
 {
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 	{
@@ -170,7 +173,7 @@ void opcontrol()
 	{ 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
 		backLiftControl();
-		controlPneumatic();
+		pneumaticControl();
 
 		pros::delay(10);
 	}
