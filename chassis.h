@@ -24,6 +24,7 @@ public:
     enum unitType {PCT, VOLT};
     void spinLeft(double speed, unitType unit=VOLT) // VOLT is -127 to 127, PCT is -100 to 100
     {
+        speed = (revControls) ? (-speed) : (speed);
         if(unit == VOLT)
         {
             backLeft.move(speed);
@@ -40,6 +41,7 @@ public:
 
     void spinRight(double speed, unitType unit=VOLT) // Spins right motors with accordance to the left motor spin function
     {
+        speed = (revControls) ? (-speed) : (speed);
         if(unit == VOLT)
         {
             backRight.move(-speed);
@@ -75,5 +77,17 @@ public:
         return (backRight.get_position() +
         midRight.get_position() +
         frontRight.get_position()) / 3;
+    }
+
+    // Other
+    bool firsttime = true;
+    bool revControls = false;
+    void reverseControls()
+    {
+      if(firsttime)
+      {
+        revControls = (revControls) ? (false) : (true);
+        firsttime = false;
+      }
     }
 };

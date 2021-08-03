@@ -6,6 +6,7 @@
 Chassis chas;
 Piston pneu(PNEUMATIC_PORT);
 pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
+pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
 
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
@@ -107,8 +108,17 @@ void arcadeDrive()
 {
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
-		chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-		chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+		if(chas.revControls)
+		{
+			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+		}
+		else
+		{
+			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+		}
+
 	}
 	else
 	{
@@ -130,20 +140,54 @@ void tankDrive()
 }
 
 // lifts
-void backLiftControl()
+void stopFrontLift()
 {
+	frontLift.move_velocity(0);
+	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+}
+
+void stopBackLift()
+{
+	backLift.move_velocity(0);
+	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+}
+
+void liftControl()
+{
+	bool front = false;
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
+		front = true;
+
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
 	{
-		backLift.move(127);
+		if(front)
+		{
+			frontLift.move(-127);
+			stopBackLift();
+		}
+		else
+		{
+			backLift.move(100);
+			stopFrontLift();
+		}
 	}
 	else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
 	{
-		backLift.move(-127);
+		if(front)
+		{
+			frontLift.move(127);
+			stopBackLift();
+		}
+		else
+		{
+			backLift.move(-100);
+			stopFrontLift();
+		}
 	}
 	else
 	{
-		backLift.move_velocity(0);
-		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+		stopFrontLift();
+		stopBackLift();
 	}
 }
 
@@ -153,6 +197,19 @@ void pneumaticControl()
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 	{
 		pneu.toggle();
+	}
+}
+
+// other
+void reverseDrive()
+{
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+	{
+		chas.reverseControls();
+	}
+	else
+	{
+		chas.firsttime = true;
 	}
 }
 
@@ -172,8 +229,9 @@ void opcontrol()
 	while (true)
 	{ 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
-		backLiftControl();
+		liftControl();
 		pneumaticControl();
+		reverseDrive();
 
 		pros::delay(10);
 	}
