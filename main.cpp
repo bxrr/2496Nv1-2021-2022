@@ -3,6 +3,8 @@
 #include "piston.h"
 #include "ports.h"
 
+#include <string.h>
+
 Chassis chas;
 Piston pneu(PNEUMATIC_PORT);
 pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
@@ -18,7 +20,7 @@ void checkInertial(int lineNum=1)
 	{
 		if(pros::lcd::is_initialized())
 		{
-			pros::lcd::print(lineNum, "inertial is calibrating...");
+			pros::lcd::set_text(lineNum, "inertial is calibrating...");
 		}
 	}
 	if(pros::lcd::is_initialized())
@@ -108,17 +110,9 @@ void arcadeDrive()
 {
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
-		if(chas.revControls)
-		{
-			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-		}
-		else
-		{
-			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-		}
-
+			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick);
+			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick);
 	}
 	else
 	{
@@ -137,6 +131,14 @@ void tankDrive()
 	{
 		chas.stop();
 	}
+}
+
+void reverseToggle()
+{
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+		chas.reverseControls();
+	else
+		chas.reverseReleased();
 }
 
 // lifts
@@ -200,19 +202,6 @@ void pneumaticControl()
 	}
 }
 
-// other
-void reverseDrive()
-{
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
-	{
-		chas.reverseControls();
-	}
-	else
-	{
-		chas.firsttime = true;
-	}
-}
-
 // main control functions ======================================================
 void initialize()
 {
@@ -225,14 +214,27 @@ void competition_initialize() {}
 
 void opcontrol()
 {
-	pros::lcd::set_text(0, "sussy fortnight :D");
+	pros::lcd::set_text(0, "running");
+
+	int counter = 0;
+	con.clear();
 	while (true)
 	{ 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
 		liftControl();
 		pneumaticControl();
-		reverseDrive();
+		reverseToggle();
 
+		if(counter == 5) // print all temperatures every 50 milliseconds
+		{
+			con.clear();
+			con.set_text(0, 0, "Reverse: " + std::to_string(chas.reverseStatus()));
+			con.set_text(1, 0, "Left   : " + std::to_string(chas.leftTemp()) + "°C");
+			con.set_text(2, 0, "Right  : " + std::to_string(chas.rightTemp()) + "°C");
+			counter = 0;
+		}
+
+		counter++;
 		pros::delay(10);
 	}
 }
