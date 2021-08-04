@@ -65,6 +65,7 @@ public:
     {
         spinLeft(0);
         spinRight(0);
+        //maybe add brake type variable here?
     }
 
     // Motor position functions ==================================================

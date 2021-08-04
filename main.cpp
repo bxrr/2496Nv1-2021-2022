@@ -31,6 +31,12 @@ void checkInertial(int lineNum=1)
 
 // auton functions =============================================================
 enum driveDirection {FORWARD, BACKWARD};
+/* 
+a drive direction isn't really needed because you can set the target to be negative
+also you should add a timeout period in which after x amount of time the loop breaks
+in scenarios of the robot getting stuck or not being able to reach the true value, etc
+*/
+
 void drive(double targetEnc, driveDirection dir=FORWARD)
 {
 	// Drive distance variables: uses motor encodings with distance error
@@ -225,7 +231,7 @@ void opcontrol()
 		pneumaticControl();
 		reverseToggle();
 
-		if(counter == 5) // print all temperatures every 50 milliseconds
+		if(counter == 5) // print relevant information every 50 ms
 		{
 			con.clear();
 			con.set_text(0, 0, "Reverse: " + std::to_string(chas.reverseStatus()));
