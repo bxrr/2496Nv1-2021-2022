@@ -6,7 +6,8 @@
 #include <string.h>
 
 Chassis chas;
-Piston frontPneu(FRONT_PNEUMATIC_PORT);
+Piston frontLeftPneu(FRONT_L_PNEUMATIC_PORT);
+Piston frontRightPneu(FRONT_R_PNEUMATIC_PORT);
 Piston backPneu(BACK_PNEUMATIC_PORT);
 pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
 pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
@@ -166,64 +167,105 @@ void reverseToggle()
 void stopFrontLift()
 {
 	frontLift.move_velocity(0);
-	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 void stopBackLift()
 {
 	backLift.move_velocity(0);
-	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 void liftControl()
 {
-	bool front = false;
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
-		front = true;
-
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
-	{
-		if(front)
-		{
-			frontLift.move(-127);
-			stopBackLift();
-		}
-		else
-		{
-			backLift.move(100);
-			stopFrontLift();
-		}
-	}
-	else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
-	{
-		if(front)
-		{
-			frontLift.move(127);
-			stopBackLift();
-		}
-		else
-		{
-			backLift.move(-100);
-			stopFrontLift();
-		}
-	}
+	// Check if 'X' is being pressed and set back lift to coast if it is
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	else
+		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
+	// Check if driver is currently controlling pneumatics or lifts
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) == false)
 	{
-		stopFrontLift();
-		stopBackLift();
+
+		// Check L1 to see if driver wants to control front lift or back lift
+		bool front = false;
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
+			front = true;
+
+		// Move lift up
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		{
+			if(front)
+			{
+				frontLift.move(-127);
+				stopBackLift();
+			}
+			else
+			{
+				backLift.move(100);
+				stopFrontLift();
+			}
+		}
+		// Move lift down
+		else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		{
+			if(front)
+			{
+				frontLift.move(127);
+				stopBackLift();
+			}
+			else
+			{
+				backLift.move(-100);
+				stopFrontLift();
+			}
+		}
+		// No buttons are being pressed so stop both lifts
+		else
+		{
+			stopFrontLift();
+			stopBackLift();
+		}
 	}
 }
 
-// pneumatic
+// Pneumatics
 void pneumaticControl()
 {
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+	// Check if l2 is pressed down, meaning driver wants to control the pneumatics
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
 	{
-		frontPneu.toggle();
-	}
-	else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
-	{
-		backPneu.toggle();
+		// firstPress1 boolean is used to make sure the front pneumatic
+		// doesn't repeatedly toggle on and off when R1 is held
+		static bool firstPress1 = true;
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		{
+			// Check if this is R1's initial press, and toggle the pneumatic if it is.
+			if(firstPress1)
+			{
+				frontLeftPneu.toggle();
+				frontRightPneu.toggle();
+				firstPress1 = false;
+			}
+		}
+		// Allow the pneumatic to be toggled again after the button has been released
+		else
+			firstPress1 = true;
+
+		// firstPress2 boolean is used to make sure the back pneumatic
+		// doesn't repeatedly toggle on and off when the R2 is held
+		static bool firstPress2 = true;
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		{
+			// Check if this is R2's initial press, and toggle the pneumatic if it is.
+			if(firstPress2)
+			{
+				backPneu.toggle();
+				firstPress2 = false;
+			}
+		}
+		// Allow the pneumatic to be toggled again after the button has been released
+		else
+			firstPress2 = true;
 	}
 }
 
@@ -231,6 +273,8 @@ void pneumaticControl()
 void initialize()
 {
 	pros::lcd::initialize();
+	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 void disabled() {}
@@ -241,25 +285,26 @@ void opcontrol()
 {
 	pros::lcd::set_text(0, "running");
 
-	int counter = 0;
+	short int counter = 0;
 	con.clear();
 	while (true)
-	{ 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
+	{
+		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
 		liftControl();
 		pneumaticControl();
 		reverseToggle();
 
-		if(counter == 5) // print relevant information every 50 ms
-		{
-			con.clear();
+		// print information to controller
+		if(counter == 5)
 			con.set_text(0, 0, "Reverse: " + std::to_string(chas.reverseStatus()));
-			con.set_text(1, 0, "Left   : " + std::to_string(chas.leftTemp()) + "°C");
-			con.set_text(2, 0, "Right  : " + std::to_string(chas.rightTemp()) + "°C");
+		if(counter == 10)
+		{
+			con.set_text(1, 0, "Chassis: " + std::to_string((chas.leftTemp() + chas.rightTemp()) / 2) + "°C");
 			counter = 0;
 		}
-
 		counter++;
+
 		pros::delay(10);
 	}
 }
