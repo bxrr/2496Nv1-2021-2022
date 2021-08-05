@@ -6,7 +6,8 @@
 #include <string.h>
 
 Chassis chas;
-Piston pneu(PNEUMATIC_PORT);
+Piston frontPneu(FRONT_PNEUMATIC_PORT);
+Piston backPneu(BACK_PNEUMATIC_PORT);
 pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
 pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
 
@@ -218,7 +219,11 @@ void pneumaticControl()
 {
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 	{
-		pneu.toggle();
+		frontPneu.toggle();
+	}
+	else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+	{
+		backPneu.toggle();
 	}
 }
 
