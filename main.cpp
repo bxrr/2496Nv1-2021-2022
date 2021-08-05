@@ -30,15 +30,11 @@ void checkInertial(int lineNum=1)
 }
 
 // auton functions =============================================================
-enum driveDirection {FORWARD, BACKWARD};
-/* 
-a drive direction isn't really needed because you can set the target to be negative
-also you should add a timeout period in which after x amount of time the loop breaks
-in scenarios of the robot getting stuck or not being able to reach the true value, etc
-*/
-
-void drive(double targetEnc, driveDirection dir=FORWARD)
+void drive(double targetEnc, int timeout=4000) // timeout in milliseconds
 {
+	// Timeout counter
+	int time = 0;
+
 	// Drive distance variables: uses motor encodings with distance error
 	double leftStartPos = chas.getLeftPos();
 	double rightStartPos = chas.getRightPos();
@@ -75,14 +71,25 @@ void drive(double targetEnc, driveDirection dir=FORWARD)
 		// Apply speeds
 		chas.spinLeft((baseSpeed) + (error * kP) + (integral * kI) + (derivative * kD));
 		chas.spinRight(baseSpeed);
+
+		// delay while loop
+		pros::delay(10);
+		time += 10;
+		// check timeout
+		if(timeout <= time)
+			break;
 	}
 	// Stop robot after loop
 	chas.stop();
 }
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
-void rotate(double degrees, rotateDirection dir=CW)
-{   // Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
+void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
+{
+	// Timeout counter
+	int time = 0;
+
+	// Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
 	double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
 	double currentRotation = inert.get_rotation();
 	double error = targetRotation - currentRotation;
@@ -98,6 +105,13 @@ void rotate(double degrees, rotateDirection dir=CW)
 
 		chas.spinLeft(speed);
 		chas.spinRight(speed);
+
+		// delay while loop
+		pros::delay(10);
+		time += 10;
+		// check timeout
+		if(timeout <= time)
+			break;
 	}
 	chas.stop();
 }
@@ -106,7 +120,7 @@ void rotate(double degrees, rotateDirection dir=CW)
 void autonomous()
 {
 	// drive(180.0); // go forward 1 wheel revolution (no 2nd parameter defaults to FORWARD)
-	// drive(180.0, BACKWARD);
+	// drive(180.0, BW);
 	// rotate(90.0); // 2nd parameter defaults to clockwise
 	// rotate(90.0, CCW);
 }
