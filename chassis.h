@@ -60,12 +60,45 @@ public:
         }
     }
 
-    // Change brake type =========================================================
+    // Change brake type/stop ===================================================
     void stop()
     {
         spinLeft(0);
         spinRight(0);
         //maybe add brake type variable here?
+    }
+
+    enum brakeTypes {COAST, HOLD};
+    void changeBrake(brakeTypes bT)
+    {
+
+      if(bT == COAST)
+      {
+        backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        backRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      }
+
+      else
+      {
+        backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+      }
+    }
+    //HOLD = 1, COAST = 0, 2 = neither coast nor hold
+    int getBrakeMode()
+    {
+      if(frontLeft.get_brake_mode() == pros::E_MOTOR_BRAKE_HOLD) {return(1);}
+      else if(frontLeft.get_brake_mode() == pros::E_MOTOR_BRAKE_COAST) {return(0);}
+      else {return(2);}
     }
 
     // Motor position functions ==================================================
@@ -94,10 +127,7 @@ public:
       }
     }
 
-    void reverseReleased()
-    {
-      reverseButton = true;
-    }
+    void reverseReleased() { reverseButton = true; }
 
     bool reverseStatus()
     {

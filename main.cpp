@@ -163,6 +163,19 @@ void reverseToggle()
 		chas.reverseReleased();
 }
 
+
+void brakeType()
+{
+	bool brakeinitiate = true;
+
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+	{
+		if(chas.getBrakeMode() == 0) {chas.changeBrake(chas.HOLD);}
+		else {chas.changeBrake(chas.COAST);}
+		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {}
+	}
+}
+
 // lifts
 void stopFrontLift()
 {
@@ -180,7 +193,7 @@ void liftControl()
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
 		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	else
-		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	// Check if driver is currently controlling pneumatics or lifts
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) == false)
@@ -275,6 +288,7 @@ void initialize()
 	pros::lcd::initialize();
 	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	chas.changeBrake(chas.COAST);
 }
 
 void disabled() {}
@@ -294,13 +308,22 @@ void opcontrol()
 		liftControl();
 		pneumaticControl();
 		reverseToggle();
+		brakeType();
 
 		// print information to controller
 		if(counter == 5)
-			con.set_text(0, 0, "Reverse: " + std::to_string(chas.reverseStatus()));
+		{
+			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
+			else {con.set_text(0,0, "Chas: REVERSE");}
+		}
 		if(counter == 10)
 		{
-			con.set_text(1, 0, "Chassis: " + std::to_string((chas.leftTemp() + chas.rightTemp()) / 2) + "°C");
+			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Type: COAST");}
+			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Type : HOLD");}
+		}
+		if(counter == 15)
+		{
+			con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
 			counter = 0;
 		}
 		counter++;
