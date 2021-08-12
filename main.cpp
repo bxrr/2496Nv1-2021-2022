@@ -1,6 +1,5 @@
 #include "main.h"
 #include "chassis.h"
-#include "piston.h"
 #include "ports.h"
 
 #include <string.h>
@@ -32,7 +31,7 @@ void checkInertial(int lineNum=1)
 }
 
 // auton functions =============================================================
-void drive(double targetEnc, int timeout=4000) // timeout in milliseconds
+void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 {
 	// Timeout counter
 	int time = 0;
@@ -313,17 +312,21 @@ void opcontrol()
 		// print information to controller
 		if(counter == 5)
 		{
-			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
+			//print whether the chassis controls are reversed or not
+			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}   
 			else {con.set_text(0,0, "Chas: REVERSE");}
 		}
 		if(counter == 10)
 		{
+			//print the brake type for the chassis
 			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Type: COAST");}
 			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Type : HOLD");}
 		}
 		if(counter == 15)
 		{
-			con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			//prints the temperature of the chassis
+			//con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			con.print(2,0, "Inert: %.2f", inert.get_rotation());
 			counter = 0;
 		}
 		counter++;
