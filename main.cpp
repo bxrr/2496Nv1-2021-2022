@@ -193,7 +193,11 @@ void autoBrakeMode()	//automatically sets brake mode
 	if(!disableAuto)
 	{
 		//set brake type to hold if robot is on platform and is at risk of sliding off
-		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) {chas.changeBrake(chas.HOLD);}
+		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) 
+		{
+			chas.changeBrake(chas.HOLD);
+			getStartTime = true;		//reset the 2 second timer
+		}
 		//set brake type to coast w/ 2 second delay 
 		else
 		{
