@@ -107,6 +107,12 @@ public:
           lError = 0;
           rError = 0;
           firstRun = false; 
+          backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+          backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+          frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+          frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+          midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+          midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         }
         else
           lError = leftStart - getLeftPos();
