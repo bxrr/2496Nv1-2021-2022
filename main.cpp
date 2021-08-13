@@ -216,7 +216,6 @@ void autoBrakeMode()	//automatically sets brake mode
 			}
 		}
 	}
-
 }
 
 
