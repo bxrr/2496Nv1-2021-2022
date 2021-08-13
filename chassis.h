@@ -68,9 +68,11 @@ public:
         //maybe add brake type variable here?
     }
 
-    enum brakeTypes {COAST, HOLD, S_HOLD};    //add a special brake that actually stops the chassis, sometimes it rolls down platform
+    enum brakeTypes {COAST, HOLD, S_HOLD}; // special hold applies motor speed to prevent the robot from moving.
     void changeBrake(brakeTypes bT)
     {
+      static bool firstRun = true; // first run makes sure that S_HOLD mode only initializes once, as it's basically just a PID
+        
       if(bT == COAST)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -79,8 +81,9 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        firstRun = true;
       }
-      else
+      else if(bt == HOLD)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -88,15 +91,29 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        firstRun = true;
       }
-        
-      if(bt == S_HOLD)
+      else if(bt == S_HOLD)
       {
-        static bool firstRun = true;
-        if(error == 0)
-            startEnc = (getLeftTicks() + getRightTicks) / 2;
-        spinLeft();
-        spinRight();
+        float kP = 0.1  
+        static double leftStart;
+        static double rightStart;
+        static double lError;
+        static double rError;
+        if(firstRun)
+        {
+          leftStart = getLeftPos();
+          rightStart = getRightPos();
+          lError = 0;
+          rError = 0;
+          firstRun = false; 
+        }
+        else
+          lError = leftStart - getLeftPos();
+          rError = rightStart - getRightPos();
+          
+          spinLeft(lError * kP);
+          spinRight(rError * kP);
       }
     }
     
