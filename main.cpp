@@ -381,8 +381,8 @@ void opcontrol()
 		if(counter == 15)
 		{
 			//prints the temperature of the chassis
-			//con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-			con.print(2, 0, "Inert: %.2f", inert.get_pitch());
+			con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
 			counter = 0;
 		}
 		counter++;
