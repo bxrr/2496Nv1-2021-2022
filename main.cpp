@@ -16,7 +16,7 @@ pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
-int brainTime;
+int globalTime;		//time since code has initialized, used as a timer
 
 // misc functions ==============================================================
 void checkInertial(int lineNum=1)
@@ -166,18 +166,55 @@ void reverseToggle()
 		chas.reverseReleased();
 }
 
-
+//brake type control
+bool disableAuto = false;
 void brakeType()
 {
+	int startTime;
 	bool brakeinitiate = true;
 
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
 	{
 		if(chas.getBrakeMode() == 0) {chas.changeBrake(chas.HOLD);}
 		else {chas.changeBrake(chas.COAST);}
+		disableAuto = true;
+		startTime = globalTime;
 		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {}
 	}
+	//disable automatic brake mode selection if manual selection has been made within 10 sec
+	globalTime - startTime < 10000 ? disableAuto = true : disableAuto = false;
 }
+
+void autoBrakeMode()	//automatically sets brake mode
+{
+	static bool getStartTime = true;
+	static int startTime;
+	//disable automatic brake mode selection if manual selection has been made within 10 sec
+	if(!disableAuto)
+	{
+		//set brake type to hold if robot is on platform and is at risk of sliding off
+		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) {chas.changeBrake(chas.HOLD);}
+		//set brake type to coast w/ 2 second delay 
+		else
+		{
+			if(chas.getBrakeMode() == 1 && globalTime > 3000)
+			{
+				if(getStartTime)
+				{
+					startTime = globalTime;
+					getStartTime = false;
+				}
+				if (globalTime - startTime > 2000)
+				{
+					chas.changeBrake(chas.COAST);
+					getStartTime = true;
+				}
+			}
+		}
+	}
+
+}
+
 
 // lifts
 void stopFrontLift()
@@ -285,29 +322,6 @@ void pneumaticControl()
 	}
 }
 
-void autoBrakeMode()
-{
-	static bool first = true;
-	static int starttime;
-	if(abs(int(inert.get_pitch())) > 10 && brainTime > 3000) {chas.changeBrake(chas.HOLD);}
-	else
-	{
-		if(chas.getBrakeMode() == 1 && brainTime > 3000)
-		{
-			if(first)
-			{
-				starttime = brainTime;
-				first = false;
-			}
-			if (brainTime - starttime > 1900)
-			{
-				chas.changeBrake(chas.COAST);
-				first = true;
-			}
-		}
-	}
-
-}
 
 // main control functions ======================================================
 void initialize()
@@ -349,8 +363,16 @@ void opcontrol()
 		if(counter == 10)
 		{
 			//print the brake type for the chassis
-			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Type: COAST");}
-			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Type : HOLD");}
+			if(disableAuto)
+			{
+				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
+				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
+			}
+			else
+			{
+				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
+				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
+			}
 		}
 		if(counter == 15)
 		{
