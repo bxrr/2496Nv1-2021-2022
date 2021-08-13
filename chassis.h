@@ -68,7 +68,7 @@ public:
         //maybe add brake type variable here?
     }
 
-    enum brakeTypes {COAST, HOLD};
+    enum brakeTypes {COAST, HOLD};    //add a special brake that actually stops the chassis, sometimes it rolls down platform
     void changeBrake(brakeTypes bT)
     {
 
