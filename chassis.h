@@ -68,10 +68,9 @@ public:
         //maybe add brake type variable here?
     }
 
-    enum brakeTypes {COAST, HOLD};    //add a special brake that actually stops the chassis, sometimes it rolls down platform
+    enum brakeTypes {COAST, HOLD, S_HOLD};    //add a special brake that actually stops the chassis, sometimes it rolls down platform
     void changeBrake(brakeTypes bT)
     {
-
       if(bT == COAST)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -89,6 +88,15 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      }
+        
+      if(bt == S_HOLD)
+      {
+        static bool firstRun = true;
+        if(error == 0)
+            startEnc = (getLeftTicks() + getRightTicks) / 2;
+        spinLeft();
+        spinRight();
       }
     }
     
