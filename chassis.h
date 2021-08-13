@@ -83,7 +83,7 @@ public:
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         firstRun = true;
       }
-      else if(bt == HOLD)
+      else if(bT == HOLD)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -93,9 +93,9 @@ public:
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         firstRun = true;
       }
-      else if(bt == S_HOLD)
+      else if(bT == S_HOLD)
       {
-        float kP = 0.1  
+        float kP = 0.1;
         static double leftStart;
         static double rightStart;
         static double lError;
