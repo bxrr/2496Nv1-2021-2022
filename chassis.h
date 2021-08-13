@@ -81,7 +81,6 @@ public:
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       }
-
       else
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -90,9 +89,9 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-
       }
     }
+    
     //HOLD = 1, COAST = 0, 2 = neither coast nor hold
     int getBrakeMode()
     {

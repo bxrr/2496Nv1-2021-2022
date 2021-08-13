@@ -1,9 +1,11 @@
 #include "main.h"
 #include "chassis.h"
 #include "ports.h"
+#include "piston.h"
 
 #include <string.h>
 
+// Globals
 Chassis chas;
 Piston frontLeftPneu(FRONT_L_PNEUMATIC_PORT);
 Piston frontRightPneu(FRONT_R_PNEUMATIC_PORT);
@@ -13,6 +15,8 @@ pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
 
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
+
+int brainTime;
 
 // misc functions ==============================================================
 void checkInertial(int lineNum=1)
@@ -281,6 +285,30 @@ void pneumaticControl()
 	}
 }
 
+void autoBrakeMode()
+{
+	static bool first = true;
+	static int starttime;
+	if(abs(int(inert.get_pitch())) > 10 && brainTime > 3000) {chas.changeBrake(chas.HOLD);}
+	else
+	{
+		if(chas.getBrakeMode() == 1 && brainTime > 3000)
+		{
+			if(first)
+			{
+				starttime = brainTime;
+				first = false;
+			}
+			if (brainTime - starttime > 1900)
+			{
+				chas.changeBrake(chas.COAST);
+				first = true;
+			}
+		}
+	}
+
+}
+
 // main control functions ======================================================
 void initialize()
 {
@@ -300,6 +328,7 @@ void opcontrol()
 
 	short int counter = 0;
 	con.clear();
+	chas.changeBrake(chas.COAST);
 	while (true)
 	{
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
@@ -308,12 +337,13 @@ void opcontrol()
 		pneumaticControl();
 		reverseToggle();
 		brakeType();
+		autoBrakeMode();
 
 		// print information to controller
 		if(counter == 5)
 		{
 			//print whether the chassis controls are reversed or not
-			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}   
+			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 			else {con.set_text(0,0, "Chas: REVERSE");}
 		}
 		if(counter == 10)
@@ -326,11 +356,12 @@ void opcontrol()
 		{
 			//prints the temperature of the chassis
 			//con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-			con.print(2,0, "Inert: %.2f", inert.get_rotation());
+			con.print(2, 0, "Inert: %.2f", inert.get_pitch());
 			counter = 0;
 		}
 		counter++;
 
 		pros::delay(10);
+		globalTime += 10;
 	}
 }
