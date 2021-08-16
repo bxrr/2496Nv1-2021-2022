@@ -170,9 +170,8 @@ void reverseToggle()
 bool disableAuto = false;
 void brakeType()
 {
-	int startTime;
 	bool brakeinitiate = true;
-
+	static int startTime = 0;
 	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
 	{
 		if(chas.getBrakeMode() == 0) {chas.changeBrake(chas.HOLD);}
@@ -182,7 +181,7 @@ void brakeType()
 		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {}
 	}
 	//disable automatic brake mode selection if manual selection has been made within 10 sec
-	globalTime - startTime < 10000 ? disableAuto = true : disableAuto = false;
+	if(!(startTime == 0)) {globalTime - startTime < 8000 ? disableAuto = true : disableAuto = false;}
 }
 
 void autoBrakeMode()	//automatically sets brake mode
@@ -195,7 +194,7 @@ void autoBrakeMode()	//automatically sets brake mode
 		//set brake type to hold if robot is on platform and is at risk of sliding off
 		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) 
 		{
-			chas.changeBrake(chas.S_HOLD);
+			chas.changeBrake(chas.HOLD);
 			getStartTime = true;		//reset the 2 second timer
 		}
 		//set brake type to coast w/ 2 second delay 
@@ -334,6 +333,7 @@ void initialize()
 	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	chas.changeBrake(chas.COAST);
+	disableAuto = false;
 }
 
 void disabled() {}
@@ -381,8 +381,9 @@ void opcontrol()
 		if(counter == 15)
 		{
 			//prints the temperature of the chassis
-			con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			//con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
 			//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
+			con.print(2,0,"chas: %.0f", (chas.getLeftPos() + chas.getRightPos() )/2);
 			counter = 0;
 		}
 		counter++;

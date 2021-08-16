@@ -71,8 +71,7 @@ public:
     enum brakeTypes {COAST, HOLD, S_HOLD}; // special hold applies motor speed to prevent the robot from moving.
     void changeBrake(brakeTypes bT)
     {
-      static bool firstRun = true; // first run makes sure that S_HOLD mode only initializes once, as it's basically just a PID
-        
+      
       if(bT == COAST)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -81,7 +80,7 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-        firstRun = true;
+
       }
       else if(bT == HOLD)
       {
@@ -91,11 +90,12 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-        firstRun = true;
       }
+      
       else if(bT == S_HOLD)
       {
-        float kP = 0.1;
+        float kP = 1;
+        static bool firstRun = true;
         static double leftStart;
         static double rightStart;
         static double lError;
@@ -115,12 +115,23 @@ public:
           midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         }
         else
+        {
           lError = leftStart - getLeftPos();
           rError = rightStart - getRightPos();
-          
-          spinLeft(lError * kP);
-          spinRight(rError * kP);
+          if(lError > 50 || rError > 50)
+          {
+            spinLeft(-lError * kP);
+            spinRight(-rError * kP);
+          }
+          else
+          {
+            spinLeft(0);
+            spinRight(0);
+          }
+        }
+        
       }
+      
     }
     
     //HOLD = 1, COAST = 0, 2 = neither coast nor hold
