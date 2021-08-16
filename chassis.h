@@ -71,7 +71,7 @@ public:
     enum brakeTypes {COAST, HOLD, S_HOLD}; // special hold applies motor speed to prevent the robot from moving.
     void changeBrake(brakeTypes bT)
     {
-      
+      static bool firstRun = true;
       if(bT == COAST)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -80,7 +80,7 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-
+        firstRun = true;
       }
       else if(bT == HOLD)
       {
@@ -90,12 +90,11 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        firstRun = true;
       }
-      
-      else if(bT == S_HOLD)
+      else
       {
-        float kP = 1;
-        static bool firstRun = true;
+        float kP = 0.3;
         static double leftStart;
         static double rightStart;
         static double lError;
@@ -106,19 +105,21 @@ public:
           rightStart = getRightPos();
           lError = 0;
           rError = 0;
+            
+          backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+          backRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+          frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+          frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+          midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+          midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+            
           firstRun = false; 
-          backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-          backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-          frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-          frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-          midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-          midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         }
         else
         {
           lError = leftStart - getLeftPos();
           rError = rightStart - getRightPos();
-          if(lError > 50 || rError > 50)
+          if(abs(lError) > 50 || abs(rError) > 50)
           {
             spinLeft(-lError * kP);
             spinRight(-rError * kP);
