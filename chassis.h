@@ -69,9 +69,8 @@ public:
     }
 
     enum brakeTypes {COAST, HOLD, S_HOLD}; // special hold applies motor speed to prevent the robot from moving.
-    void changeBrake(brakeTypes bT)
+    void changeBrake(brakeTypes bT, double inertialv = 0)
     {
-      static bool firstRun = true;
       if(bT == COAST)
       {
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -80,7 +79,6 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-        firstRun = true;
       }
       else if(bT == HOLD)
       {
@@ -90,47 +88,22 @@ public:
         frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-        firstRun = true;
       }
+
       else
       {
-        float kP = 0.3;
-        static double leftStart;
-        static double rightStart;
-        static double lError;
-        static double rError;
-        if(firstRun)
-        {
-          leftStart = getLeftPos();
-          rightStart = getRightPos();
-          lError = 0;
-          rError = 0;
-            
-          backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-          backRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-          frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-          frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-          midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-          midRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-            
-          firstRun = false; 
-        }
-        else
-        {
-          lError = leftStart - getLeftPos();
-          rError = rightStart - getRightPos();
-          if(abs(lError) > 50 || abs(rError) > 50)
-          {
-            spinLeft(-lError * kP);
-            spinRight(-rError * kP);
-          }
-          else
-          {
-            spinLeft(0);
-            spinRight(0);
-          }
-        }
-        
+        float k;
+        reverse ? (k = -1.2) : (k = 1.2);
+
+        spinLeft(inertialv*k);
+        spinRight(inertialv*k);
+
+        backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        frontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        frontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
       }
       
     }
