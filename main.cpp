@@ -251,9 +251,9 @@ void liftControl()
 	{
 
 		// Check L1 to see if driver wants to control front lift or back lift
-		bool front = false;
+		bool front = true;
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
-			front = true;
+			front = false;
 
 		// Move lift up
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
