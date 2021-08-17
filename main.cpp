@@ -7,8 +7,7 @@
 
 // Globals
 Chassis chas;
-Piston frontLeftPneu(FRONT_L_PNEUMATIC_PORT);
-Piston frontRightPneu(FRONT_R_PNEUMATIC_PORT);
+Piston frontPneu(FRONT_PNEUMATIC_PORT);
 Piston backPneu(BACK_PNEUMATIC_PORT);
 pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
 pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
@@ -306,8 +305,7 @@ void pneumaticControl()
 			// Check if this is R1's initial press, and toggle the pneumatic if it is.
 			if(firstPress1)
 			{
-				frontLeftPneu.toggle();
-				frontRightPneu.toggle();
+				frontPneu.toggle();
 				firstPress1 = false;
 			}
 		}
