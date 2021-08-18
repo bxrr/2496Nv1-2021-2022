@@ -105,7 +105,6 @@ public:
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
       }
-      
     }
     
     //HOLD = 1, COAST = 0, 2 = neither coast nor hold
