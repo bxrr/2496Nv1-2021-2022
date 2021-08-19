@@ -16,6 +16,7 @@ pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
 int globalTime;		//time since code has initialized, used as a timer
+bool disableAll = false;
 
 // misc functions ==============================================================
 void checkInertial(int lineNum=1)
@@ -264,7 +265,7 @@ void liftControl()
 			}
 			else
 			{
-				backLift.move(100);
+				if(backLift.get_position() < -100 || disableAll) {backLift.move(100);}
 				stopFrontLift();
 			}
 		}
@@ -278,7 +279,7 @@ void liftControl()
 			}
 			else
 			{
-				backLift.move(-100);
+				if(backLift.get_position() > -1500 || disableAll) {backLift.move(-100);}
 				stopFrontLift();
 			}
 		}
@@ -286,7 +287,8 @@ void liftControl()
 		else
 		{
 			stopFrontLift();
-			stopBackLift();
+			if(backLift.get_position() > -50 && !disableAll) {backLift.move(-100);}
+			else {stopBackLift();}
 		}
 	}
 }
@@ -331,6 +333,17 @@ void pneumaticControl()
 	}
 }
 
+void killAllAuto()
+{
+	if(disableAll) {disableAuto = true;}
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+	{
+		con.clear();
+		disableAll = !disableAll;
+		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {}
+	}
+}
+
 
 // main control functions ======================================================
 void initialize()
@@ -341,6 +354,8 @@ void initialize()
 	chas.changeBrake(chas.COAST);
 	disableAuto = false;
 }
+
+
 
 void disabled() {}
 
@@ -362,6 +377,7 @@ void opcontrol()
 		reverseToggle();
 		brakeType();
 		autoBrakeMode();
+		killAllAuto();
 
 		// print information to controller
 		if(counter == 5)
@@ -373,7 +389,7 @@ void opcontrol()
 		if(counter == 10)
 		{
 			//print the brake type for the chassis
-			if(disableAuto)
+			if(disableAuto) 
 			{
 				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
 				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
@@ -387,7 +403,20 @@ void opcontrol()
 		if(counter == 15)
 		{
 			//prints the temperature of the chassis
-			con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+
+			if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
+			else
+			{
+				if((chas.leftTemp() + chas.rightTemp()) /2 > 53) 
+				{
+					con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+				}
+				else
+				{
+					con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+				}
+			}
+
 			//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
 			counter = 0;
 		}
