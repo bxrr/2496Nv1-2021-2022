@@ -16,7 +16,7 @@ pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
-int brainTime;
+int globalTime;
 
 // misc functions ==============================================================
 void checkInertial(int lineNum=1)
@@ -289,17 +289,17 @@ void autoBrakeMode()
 {
 	static bool first = true;
 	static int starttime;
-	if(abs(int(inert.get_pitch())) > 10 && brainTime > 3000) {chas.changeBrake(chas.HOLD);}
+	if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) {chas.changeBrake(chas.HOLD);}
 	else
 	{
-		if(chas.getBrakeMode() == 1 && brainTime > 3000)
+		if(chas.getBrakeMode() == 1 && globalTime > 3000)
 		{
 			if(first)
 			{
-				starttime = brainTime;
+				starttime = globalTime;
 				first = false;
 			}
-			if (brainTime - starttime > 1900)
+			if (globalTime - starttime > 1900)
 			{
 				chas.changeBrake(chas.COAST);
 				first = true;
