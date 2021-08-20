@@ -23,10 +23,7 @@ void checkInertial(int lineNum=1)
 {
 	while(inert.is_calibrating())
 	{
-		if(pros::lcd::is_initialized())
-		{
-			pros::lcd::set_text(lineNum, "inertial is calibrating...");
-		}
+		pros::lcd::set_text(lineNum, "inertial is calibrating...");
 	}
 	if(pros::lcd::is_initialized())
 	{
@@ -56,16 +53,16 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 	double error = 0.0;
 	double integral = 0.0;
 
-	float kP = 0.2;
+	float kP = 0.4;
 	float kI = 0.07;
 	float kD = 0.03;
 
 	// Drive loop, might add a timeout thing if it's needed
-	while(currentPos < targetEnc)
+	while((targetEnc > 0) ? (currentPos < targetEnc) : (currentPos > targetEnc))
 	{
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
-		baseSpeed = (distError * distKp > 3.5) ? (distError * distKp) : 3.5; // If the base speed is below 3.5, set the base speed to 3.5
+		baseSpeed = (distError * distKp > 5) ? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
 
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 		lastError = error;
@@ -74,7 +71,7 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 		derivative = error - lastError;
 
 		// Apply speeds
-		chas.spinLeft((baseSpeed) + (error * kP) + (integral * kI) + (derivative * kD));
+		chas.spinLeft((baseSpeed)); //  + (error * kP) + (integral * kI) + (derivative * kD)
 		chas.spinRight(baseSpeed);
 
 		// delay while loop
@@ -91,31 +88,37 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 }
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
-void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
+void rotate(double degrees, rotateDirection dir=CW, int timeout=3000)
 {
 	// Timeout counter
 	int time = 0;
 
 	// Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
-	double targetRotation = (dir == CW) ? (inert.get_rotation() + degrees) : (inert.get_rotation() - degrees);
-	double currentRotation = inert.get_rotation();
+	double startRotation = inert.get_heading();
+	double targetRotation = (dir == CW) ? (inert.get_heading() + degrees) : (inert.get_heading() - degrees);
+	double currentRotation = inert.get_heading();
 	double error = targetRotation - currentRotation;
 	double speed = 0.0;
 
 	float kP = 0.7;
 
-	while(currentRotation < targetRotation)
+	con.print(2, 0, "t: %f, c: %f", targetRotation, currentRotation);
+	while((dir == CW) ? (currentRotation < targetRotation) : (currentRotation > targetRotation))
 	{
-		currentRotation = inert.get_rotation();
+		if(dir == CW)
+		{
+			
+		}
 		error = targetRotation - currentRotation;
-		speed = (error * kP > 3.5) ? (error * kP) : (3.5);
+		speed = ((error * kP > 3.5) ? (error * kP) : (3.5)) * ((dir == CW) ? (1) : (-1));
 
 		chas.spinLeft(speed);
-		chas.spinRight(speed);
+		chas.spinRight(-speed);
 
 		// delay while loop
 		pros::delay(10);
 		time += 10;
+
 		// check timeout
 		if(timeout <= time)
 			break;
@@ -218,18 +221,7 @@ void autoBrakeMode()	//automatically sets brake mode
 	}
 }
 
-
 // lifts
-void stopFrontLift()
-{
-	frontLift.move_velocity(0);
-}
-
-void stopBackLift()
-{
-	backLift.move_velocity(0);
-}
-
 
 void liftControl()
 {
@@ -254,12 +246,12 @@ void liftControl()
 			if(front)
 			{
 				frontLift.move(-127);
-				stopBackLift();
+				backLift.move(0);
 			}
 			else
 			{
 				if(backLift.get_position() < -100 || disableAll) {backLift.move(100);}
-				stopFrontLift();
+				frontLift.move(0);
 			}
 		}
 		// Move lift down
@@ -268,20 +260,20 @@ void liftControl()
 			if(front)
 			{
 				frontLift.move(127);
-				stopBackLift();
+				backLift.move(0);
 			}
 			else
 			{
 				if(backLift.get_position() > -1500 || disableAll) {backLift.move(-100);}
-				stopFrontLift();
+				frontLift.move(0);
 			}
 		}
 		// No buttons are being pressed so stop both lifts
 		else
 		{
-			stopFrontLift();
+			frontLift.move(0);
 			if(backLift.get_position() > -50 && !disableAll) {backLift.move(-100);}
-			else {stopBackLift();}
+			else {backLift.move(0);}
 		}
 	}
 }
@@ -387,10 +379,12 @@ void printInfo()
 // main auton function
 void autonomous()
 {
-	drive(500.0);
 	rotate(90, CW);
-	drive(250);
-	rotate(90, CCW);
+	drive(500.0);
+	drive(-500.0);
+	// frontLift.move(127);
+	// frontLift.move(-127);
+	// backPneu.toggle();
 }
 
 // main control functions ======================================================
@@ -416,22 +410,23 @@ void opcontrol()
 	con.clear();
 	chas.changeBrake(chas.COAST);
 
-	// autonomous();
-	while (true)
-	{
-		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
-		arcadeDrive();
-		liftControl();
-		pneumaticControl();
-		reverseToggle();
-		brakeType();
-		autoBrakeMode();
-		killAllAuto();
-
-		// print information to controller
-		printInfo();
-
-		pros::delay(10);
-		globalTime += 10;
-	}
+	checkInertial();
+	autonomous();
+	// while (true)
+	// {
+	// 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
+	// 	arcadeDrive();
+	// 	liftControl();
+	// 	pneumaticControl();
+	// 	reverseToggle();
+	// 	brakeType();
+	// 	autoBrakeMode();
+	// 	killAllAuto();
+	//
+	// 	// print information to controller
+	// 	printInfo();
+	//
+	// 	pros::delay(10);
+	// 	globalTime += 10;
+	// }
 }

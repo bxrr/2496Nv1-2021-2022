@@ -65,7 +65,6 @@ public:
     {
         spinLeft(0);
         spinRight(0);
-        //maybe add brake type variable here?
     }
 
     enum brakeTypes {COAST, HOLD, S_HOLD}; // special hold applies motor speed to prevent the robot from moving.
@@ -106,7 +105,7 @@ public:
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
       }
     }
-    
+
     //HOLD = 1, COAST = 0, 2 = neither coast nor hold
     int getBrakeMode()
     {
