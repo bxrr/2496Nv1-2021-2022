@@ -83,6 +83,8 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 		// check timeout
 		if(timeout <= time)
 			break;
+
+		currentPos = chas.getLeftPos();
 	}
 	// Stop robot after loop
 	chas.stop();
@@ -183,7 +185,7 @@ void autoBrakeMode()	//automatically sets brake mode
 	if(!disableAuto)
 	{
 		//set brake type to hold if robot is on platform and is at risk of sliding off
-		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) 
+		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000)
 		{
 			if (abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10|| abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10)
 			{
@@ -195,7 +197,7 @@ void autoBrakeMode()	//automatically sets brake mode
 			}
 			getStartTime = true;		//reset the 2 second timer
 		}
-		//set brake type to coast w/ 2 second delay 
+		//set brake type to coast w/ 2 second delay
 		else
 		{
 			if(chas.getBrakeMode() == 1 && globalTime > 3000)
@@ -348,7 +350,7 @@ void printInfo()
 	if(counter == 10)
 	{
 		//print the brake type for the chassis
-		if(disableAuto) 
+		if(disableAuto)
 		{
 			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
 			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
@@ -366,7 +368,7 @@ void printInfo()
 		if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
 		else
 		{
-			if((chas.leftTemp() + chas.rightTemp()) /2 > 53) 
+			if((chas.leftTemp() + chas.rightTemp()) /2 > 53)
 			{
 				con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
 			}
@@ -380,18 +382,6 @@ void printInfo()
 		counter = 0;
 	}
 	counter++;
-}
-
-// main drive function
-void driveControl()
-{
-	arcadeDrive();
-	liftControl();
-	pneumaticControl();
-	reverseToggle();
-	brakeType();
-	autoBrakeMode();
-	killAllAuto();
 }
 
 // main auton function
@@ -423,17 +413,24 @@ void opcontrol()
 {
 	pros::lcd::set_text(0, "running");
 
-	short int counter = 0;
 	con.clear();
 	chas.changeBrake(chas.COAST);
+
+	// autonomous();
 	while (true)
 	{
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
-		driveControl();
+		arcadeDrive();
+		liftControl();
+		pneumaticControl();
+		reverseToggle();
+		brakeType();
+		autoBrakeMode();
+		killAllAuto();
 
 		// print information to controller
 		printInfo();
-		
+
 		pros::delay(10);
 		globalTime += 10;
 	}
