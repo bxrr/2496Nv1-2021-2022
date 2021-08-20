@@ -121,15 +121,6 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 	chas.stop();
 }
 
-// main auton function
-void autonomous()
-{
-	// drive(180.0); // go forward 1 wheel revolution (no 2nd parameter defaults to FORWARD)
-	// drive(180.0, BW);
-	// rotate(90.0); // 2nd parameter defaults to clockwise
-	// rotate(90.0, CCW);
-}
-
 // driver control functions ====================================================
 void arcadeDrive()
 {
@@ -344,6 +335,73 @@ void killAllAuto()
 	}
 }
 
+// opControl/auton functions
+void printInfo()
+{
+	static int counter = 0;
+	if(counter == 5)
+	{
+		//print whether the chassis controls are reversed or not
+		if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
+		else {con.set_text(0,0, "Chas: REVERSE");}
+	}
+	if(counter == 10)
+	{
+		//print the brake type for the chassis
+		if(disableAuto) 
+		{
+			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
+			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
+		}
+		else
+		{
+			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
+			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
+		}
+	}
+	if(counter == 15)
+	{
+		//prints the temperature of the chassis
+
+		if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
+		else
+		{
+			if((chas.leftTemp() + chas.rightTemp()) /2 > 53) 
+			{
+				con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			}
+			else
+			{
+				con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			}
+		}
+
+		//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
+		counter = 0;
+	}
+	counter++;
+}
+
+// main drive function
+void driveControl()
+{
+	arcadeDrive();
+	liftControl();
+	pneumaticControl();
+	reverseToggle();
+	brakeType();
+	autoBrakeMode();
+	killAllAuto();
+}
+
+// main auton function
+void autonomous()
+{
+	drive(500.0);
+	rotate(90, CW);
+	drive(250);
+	rotate(90, CCW);
+}
 
 // main control functions ======================================================
 void initialize()
@@ -371,57 +429,11 @@ void opcontrol()
 	while (true)
 	{
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
-		arcadeDrive();
-		liftControl();
-		pneumaticControl();
-		reverseToggle();
-		brakeType();
-		autoBrakeMode();
-		killAllAuto();
+		driveControl();
 
 		// print information to controller
-		if(counter == 5)
-		{
-			//print whether the chassis controls are reversed or not
-			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
-			else {con.set_text(0,0, "Chas: REVERSE");}
-		}
-		if(counter == 10)
-		{
-			//print the brake type for the chassis
-			if(disableAuto) 
-			{
-				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
-				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
-			}
-			else
-			{
-				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
-				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
-			}
-		}
-		if(counter == 15)
-		{
-			//prints the temperature of the chassis
-
-			if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
-			else
-			{
-				if((chas.leftTemp() + chas.rightTemp()) /2 > 53) 
-				{
-					con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-				}
-				else
-				{
-					con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-				}
-			}
-
-			//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
-			counter = 0;
-		}
-		counter++;
-
+		printInfo();
+		
 		pros::delay(10);
 		globalTime += 10;
 	}
