@@ -7,8 +7,7 @@
 
 // Globals
 Chassis chas;
-Piston frontLeftPneu(FRONT_L_PNEUMATIC_PORT);
-Piston frontRightPneu(FRONT_R_PNEUMATIC_PORT);
+Piston frontPneu(FRONT_PNEUMATIC_PORT);
 Piston backPneu(BACK_PNEUMATIC_PORT);
 pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
 pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
@@ -16,7 +15,8 @@ pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
 pros::Imu inert(INERT_PORT);
 pros::Controller con(pros::E_CONTROLLER_MASTER);
 
-int globalTime;
+int globalTime;		//time since code has initialized, used as a timer
+bool disableAll = false;
 
 // misc functions ==============================================================
 void checkInertial(int lineNum=1)
@@ -121,15 +121,6 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 	chas.stop();
 }
 
-// main auton function
-void autonomous()
-{
-	// drive(180.0); // go forward 1 wheel revolution (no 2nd parameter defaults to FORWARD)
-	// drive(180.0, BW);
-	// rotate(90.0); // 2nd parameter defaults to clockwise
-	// rotate(90.0, CCW);
-}
-
 // driver control functions ====================================================
 void arcadeDrive()
 {
@@ -166,18 +157,65 @@ void reverseToggle()
 		chas.reverseReleased();
 }
 
-
+//brake type control
+bool disableAuto = false;
 void brakeType()
 {
 	bool brakeinitiate = true;
-
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+	static int startTime = 0;
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
 	{
 		if(chas.getBrakeMode() == 0) {chas.changeBrake(chas.HOLD);}
 		else {chas.changeBrake(chas.COAST);}
-		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {}
+		disableAuto = true;
+		startTime = globalTime;
+		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {}
+	}
+	//disable automatic brake mode selection if manual selection has been made within 10 sec
+	if(!(startTime == 0)) {globalTime - startTime < 8000 ? disableAuto = true : disableAuto = false;}
+}
+
+void autoBrakeMode()	//automatically sets brake mode
+{
+	static bool getStartTime = true;
+	static int startTime;
+	//disable automatic brake mode selection if manual selection has been made within 10 sec
+	if(!disableAuto)
+	{
+		//set brake type to hold if robot is on platform and is at risk of sliding off
+		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) 
+		{
+			if (abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10|| abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10)
+			{
+				chas.changeBrake(chas.HOLD);
+			}
+			else
+			{
+				chas.changeBrake(chas.S_HOLD, inert.get_pitch());
+			}
+			getStartTime = true;		//reset the 2 second timer
+		}
+		//set brake type to coast w/ 2 second delay 
+		else
+		{
+			if(chas.getBrakeMode() == 1 && globalTime > 3000)
+			{
+				if(getStartTime)
+				{
+					startTime = globalTime;
+					getStartTime = false;
+				}
+				if (globalTime - startTime > 2000)
+				{
+					chas.changeBrake(chas.COAST);
+					chas.stop();
+					getStartTime = true;
+				}
+			}
+		}
 	}
 }
+
 
 // lifts
 void stopFrontLift()
@@ -189,6 +227,7 @@ void stopBackLift()
 {
 	backLift.move_velocity(0);
 }
+
 
 void liftControl()
 {
@@ -203,9 +242,9 @@ void liftControl()
 	{
 
 		// Check L1 to see if driver wants to control front lift or back lift
-		bool front = false;
+		bool front = true;
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
-			front = true;
+			front = false;
 
 		// Move lift up
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
@@ -217,7 +256,7 @@ void liftControl()
 			}
 			else
 			{
-				backLift.move(100);
+				if(backLift.get_position() < -100 || disableAll) {backLift.move(100);}
 				stopFrontLift();
 			}
 		}
@@ -231,7 +270,7 @@ void liftControl()
 			}
 			else
 			{
-				backLift.move(-100);
+				if(backLift.get_position() > -1500 || disableAll) {backLift.move(-100);}
 				stopFrontLift();
 			}
 		}
@@ -239,7 +278,8 @@ void liftControl()
 		else
 		{
 			stopFrontLift();
-			stopBackLift();
+			if(backLift.get_position() > -50 && !disableAll) {backLift.move(-100);}
+			else {stopBackLift();}
 		}
 	}
 }
@@ -258,8 +298,7 @@ void pneumaticControl()
 			// Check if this is R1's initial press, and toggle the pneumatic if it is.
 			if(firstPress1)
 			{
-				frontLeftPneu.toggle();
-				frontRightPneu.toggle();
+				frontPneu.toggle();
 				firstPress1 = false;
 			}
 		}
@@ -285,28 +324,83 @@ void pneumaticControl()
 	}
 }
 
-void autoBrakeMode()
+void killAllAuto()
 {
-	static bool first = true;
-	static int starttime;
-	if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000) {chas.changeBrake(chas.HOLD);}
-	else
+	if(disableAll) {disableAuto = true;}
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
 	{
-		if(chas.getBrakeMode() == 1 && globalTime > 3000)
+		con.clear();
+		disableAll = !disableAll;
+		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {}
+	}
+}
+
+// opControl/auton functions
+void printInfo()
+{
+	static int counter = 0;
+	if(counter == 5)
+	{
+		//print whether the chassis controls are reversed or not
+		if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
+		else {con.set_text(0,0, "Chas: REVERSE");}
+	}
+	if(counter == 10)
+	{
+		//print the brake type for the chassis
+		if(disableAuto) 
 		{
-			if(first)
-			{
-				starttime = globalTime;
-				first = false;
-			}
-			if (globalTime - starttime > 1900)
-			{
-				chas.changeBrake(chas.COAST);
-				first = true;
-			}
+			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
+			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
+		}
+		else
+		{
+			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
+			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
 		}
 	}
+	if(counter == 15)
+	{
+		//prints the temperature of the chassis
 
+		if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
+		else
+		{
+			if((chas.leftTemp() + chas.rightTemp()) /2 > 53) 
+			{
+				con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			}
+			else
+			{
+				con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+			}
+		}
+
+		//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
+		counter = 0;
+	}
+	counter++;
+}
+
+// main drive function
+void driveControl()
+{
+	arcadeDrive();
+	liftControl();
+	pneumaticControl();
+	reverseToggle();
+	brakeType();
+	autoBrakeMode();
+	killAllAuto();
+}
+
+// main auton function
+void autonomous()
+{
+	drive(500.0);
+	rotate(90, CW);
+	drive(250);
+	rotate(90, CCW);
 }
 
 // main control functions ======================================================
@@ -316,7 +410,10 @@ void initialize()
 	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	chas.changeBrake(chas.COAST);
+	disableAuto = false;
 }
+
+
 
 void disabled() {}
 
@@ -332,35 +429,11 @@ void opcontrol()
 	while (true)
 	{
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
-		arcadeDrive();
-		liftControl();
-		pneumaticControl();
-		reverseToggle();
-		brakeType();
-		autoBrakeMode();
+		driveControl();
 
 		// print information to controller
-		if(counter == 5)
-		{
-			//print whether the chassis controls are reversed or not
-			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
-			else {con.set_text(0,0, "Chas: REVERSE");}
-		}
-		if(counter == 10)
-		{
-			//print the brake type for the chassis
-			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Type: COAST");}
-			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Type : HOLD");}
-		}
-		if(counter == 15)
-		{
-			//prints the temperature of the chassis
-			//con.print(2, 0, "Chassis: %.2f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-			con.print(2, 0, "Inert: %.2f", inert.get_pitch());
-			counter = 0;
-		}
-		counter++;
-
+		printInfo();
+		
 		pros::delay(10);
 		globalTime += 10;
 	}
