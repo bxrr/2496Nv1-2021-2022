@@ -68,9 +68,9 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 		globalHeading = (inert.get_heading() + 30 > initialRotation && inert.get_heading() - 30 < initialRotation) ? // if inertial value is 30 degrees within start degree
-										(inert.get_heading()) :																																			 // then set the globalHeading to the current degree
-										(inert.get_heading() > 180) ? 																														 	 // Otherwise, check whether the inertial looped to 0 or 360,
-										((inert.get_heading() - 360) - globalHeading) : (360 + inert.get_heading());     			       // and set the globalHeading accordingly.
+										(inert.get_heading()) : // then set the globalHeading to the current degree
+										(inert.get_heading() > 180) ? // Otherwise, check whether the inertial looped to 0 or 360,
+										((inert.get_heading() - 360) - globalHeading) : (360 + inert.get_heading()); // and set the globalHeading accordingly.
 
 		lastError = error;
 		error = initialRotation - globalHeading;
