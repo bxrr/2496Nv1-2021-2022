@@ -63,7 +63,7 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 	while((targetEnc > 0) ? (currentPos < targetEnc) : (currentPos > targetEnc))
 	{
 		// Drive code: Distance error set to target encoding - average of left + right encodings
-		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
+		distError = targetEnc - ((chas.getLeftPos() - leftStartPos) + (chas.getRightPos() - rightStartPos) / 2);
 		baseSpeed = (distError * distKp > 5) ? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
 
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
