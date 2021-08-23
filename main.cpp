@@ -48,7 +48,9 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 	float distKp = 0.1;
 
 	// Drive straight variables: uses the intertial with PID
-	double initialRotation = inert.get_rotation();
+	double initialRotation = inert.get_heading();
+	double globalHeading = inert.get_heading();
+
 	double lastError, derivative;
 	double error = 0.0;
 	double integral = 0.0;
@@ -65,13 +67,18 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 		baseSpeed = (distError * distKp > 5) ? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
 
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
+		globalHeading = (inert.get_heading() + 30 > initialRotation && inert.get_heading() - 30 < initialRotation) ? // if inertial value is 30 degrees within start degree
+										(inert.get_heading()) :																																			 // then set the globalHeading to the current degree
+										(inert.get_heading() > 180) ? 																														 	 // Otherwise, check whether the inertial looped to 0 or 360,
+										((inert.get_heading() - 360) - globalHeading) : (360 + inert.get_heading());     			       // and set the globalHeading accordingly.
+
 		lastError = error;
-		error = initialRotation - inert.get_rotation();
+		error = initialRotation - globalHeading;
 		integral += error;
 		derivative = error - lastError;
 
 		// Apply speeds
-		chas.spinLeft((baseSpeed)); //  + (error * kP) + (integral * kI) + (derivative * kD)
+		chas.spinLeft(baseSpeed + (error * kP) + (integral * kI) + (derivative * kD));
 		chas.spinRight(baseSpeed);
 
 		// delay while loop
@@ -88,29 +95,35 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 }
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
-void rotate(double degrees, rotateDirection dir=CW, int timeout=3000)
+void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 {
 	// Timeout counter
 	int time = 0;
 
 	// Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
-	double startRotation = inert.get_heading();
-	double targetRotation = (dir == CW) ? (inert.get_heading() + degrees) : (inert.get_heading() - degrees);
+	double globalHeading = inert.get_heading();
+	double targetHeading = (dir == CW) ? (inert.get_heading() + degrees) : (inert.get_heading() - degrees);
+
+	double lastRotation;
 	double currentRotation = inert.get_heading();
-	double error = targetRotation - currentRotation;
+
+	double error = targetHeading - currentRotation;
 	double speed = 0.0;
 
-	float kP = 0.7;
+	float kP = 1.1;
 
-	con.print(2, 0, "t: %f, c: %f", targetRotation, currentRotation);
-	while((dir == CW) ? (currentRotation < targetRotation) : (currentRotation > targetRotation))
+	while((dir == CW) ? (globalHeading < targetHeading) : (globalHeading > targetHeading))
 	{
+		lastRotation = currentRotation;
+		currentRotation = inert.get_heading();
+
 		if(dir == CW)
-		{
-			
-		}
-		error = targetRotation - currentRotation;
-		speed = ((error * kP > 3.5) ? (error * kP) : (3.5)) * ((dir == CW) ? (1) : (-1));
+			globalHeading += (currentRotation >= lastRotation) ? (currentRotation - lastRotation) : ((360 - lastRotation) + currentRotation);
+		else
+			globalHeading += (currentRotation <= lastRotation) ? (currentRotation - lastRotation) : ((currentRotation - 360) - lastRotation);
+
+		error = targetHeading - globalHeading;
+		speed = (error * kP > 5) ? (error * kP) : (5);
 
 		chas.spinLeft(speed);
 		chas.spinRight(-speed);
@@ -118,7 +131,6 @@ void rotate(double degrees, rotateDirection dir=CW, int timeout=3000)
 		// delay while loop
 		pros::delay(10);
 		time += 10;
-
 		// check timeout
 		if(timeout <= time)
 			break;
