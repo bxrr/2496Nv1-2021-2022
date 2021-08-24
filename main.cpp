@@ -31,111 +31,180 @@ void checkInertial(int lineNum=1)
 	}
 }
 
+
+
+
+
 // auton functions =============================================================
 void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 {
 	// Timeout counter
 	int time = 0;
+	
+	float slewMult = 0.05; 
 
 	// Drive distance variables: uses motor encodings with distance error
 	double leftStartPos = chas.getLeftPos();
 	double rightStartPos = chas.getRightPos();
 
-	double distError = 0.0;
+	double distError = 0.1;
 	double currentPos = 0.0;
 	double baseSpeed = 0.0;
 
-	float distKp = 0.1;
+	float distKp = 1.5;
+
+	bool withinRange = false;
+	int withinRangeTime = 0;
 
 	// Drive straight variables: uses the intertial with PID
+	inert.set_heading(180);
 	double initialRotation = inert.get_heading();
-	double globalHeading = inert.get_heading();
 
 	double lastError, derivative;
 	double error = 0.0;
 	double integral = 0.0;
 
-	float kP = 0.4;
-	float kI = 0.07;
-	float kD = 0.03;
+	float kP = (targetEnc >= 0 ? 5 : -5);
+
+	con.clear();
 
 	// Drive loop, might add a timeout thing if it's needed
-	while((targetEnc > 0) ? (currentPos < targetEnc) : (currentPos > targetEnc))
+	while(timeout > time)
 	{
+		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", distError);}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
-		distError = targetEnc - ((chas.getLeftPos() - leftStartPos) + (chas.getRightPos() - rightStartPos) / 2);
-		baseSpeed = (distError * distKp > 5) ? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
-
+		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
+		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * 0.6) ? (targetEnc > 0 ? 127 * 0.6 : -127 * 0.6) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
+		if(distError < -3)
+		{
+			baseSpeed = (baseSpeed > -15) ? (-15) : (baseSpeed);
+		}
+		else if(distError > 3)
+		{
+			baseSpeed = (baseSpeed < 15) ? (15) : (baseSpeed);
+		}
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
-		globalHeading = (inert.get_heading() + 30 > initialRotation && inert.get_heading() - 30 < initialRotation) ? // if inertial value is 30 degrees within start degree
-										(inert.get_heading()) : // then set the globalHeading to the current degree
-										(inert.get_heading() > 180) ? // Otherwise, check whether the inertial looped to 0 or 360,
-										((inert.get_heading() - 360) - globalHeading) : (360 + inert.get_heading()); // and set the globalHeading accordingly.
+		
 
 		lastError = error;
-		error = initialRotation - globalHeading;
+		error = initialRotation - inert.get_heading();
 		integral += error;
 		derivative = error - lastError;
 
 		// Apply speeds
-		chas.spinLeft(baseSpeed + (error * kP) + (integral * kI) + (derivative * kD));
-		chas.spinRight(baseSpeed);
-
+		chas.spinLeft(baseSpeed + (error * kP)*(baseSpeed/80));
+		chas.spinRight(baseSpeed - (error * kP)*(baseSpeed/80));
+		
+		if(abs(distError) < 3)
+		{
+			if(!withinRange)
+		{
+				withinRangeTime = time;
+				withinRange = true;
+			}
+			else if(time >= withinRangeTime + 500)
+			{
+				break;
+			}
+		}
+		
+		else
+		{
+			withinRange = false;
+		}
+		
 		// delay while loop
 		pros::delay(10);
 		time += 10;
 		// check timeout
-		if(timeout <= time)
-			break;
 
 		currentPos = chas.getLeftPos();
+		if(slewMult < 1) {slewMult += 0.05;}
 	}
 	// Stop robot after loop
 	chas.stop();
 }
 
+
+
+
+
+
+
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
 void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 {
+	if(dir == CCW)
+		degrees = -degrees;
 	// Timeout counter
 	int time = 0;
 
 	// Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
-	double globalHeading = inert.get_heading();
-	double targetHeading = (dir == CW) ? (inert.get_heading() + degrees) : (inert.get_heading() - degrees);
+	if(degrees < 0)
+		inert.set_heading(350);
+	else if(degrees > 0)
+		inert.set_heading(10);
+    else
+		return;
 
-	double lastRotation;
+	//double globalHeading = inert.get_heading();
+	double targetHeading = inert.get_heading() + degrees;
 	double currentRotation = inert.get_heading();
 
 	double error = targetHeading - currentRotation;
+	double lastError = error;
+	double intergral = 0.0;
+	double derivative = 0.0;
+
 	double speed = 0.0;
 
-	float kP = 1.1;
+	float kP = 1.5;
+	float kI = 0.1;
+	float kD = 2;
 
-	while((dir == CW) ? (globalHeading < targetHeading) : (globalHeading > targetHeading))
+	bool integ = false;
+
+	while(true)
 	{
-		lastRotation = currentRotation;
+		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", error);}
 		currentRotation = inert.get_heading();
 
+		/*
 		if(dir == CW)
 			globalHeading += (currentRotation >= lastRotation) ? (currentRotation - lastRotation) : ((360 - lastRotation) + currentRotation);
 		else
 			globalHeading += (currentRotation <= lastRotation) ? (currentRotation - lastRotation) : ((currentRotation - 360) - lastRotation);
+		*/
 
-		error = targetHeading - globalHeading;
-		speed = (error * kP > 5) ? (error * kP) : (5);
+		lastError = error;
+		error = targetHeading - currentRotation;
+		if(error <= 1)
+		{
+			integ = true;
+		}
+		if(integ) { intergral += error; }
+		derivative = lastError - error;
+		speed = error * kP + intergral * kI + derivative * kD;
 
 		chas.spinLeft(speed);
 		chas.spinRight(-speed);
 
 		// delay while loop
-		pros::delay(10);
-		time += 10;
+		pros::delay(5);
+		time += 5;
 		// check timeout
 		if(timeout <= time)
 			break;
 	}
+	chas.changeBrake(chas.HOLD);
 	chas.stop();
+}
+
+
+
+void blah()
+{
+	rotate(90, 10000);
 }
 
 // driver control functions ====================================================
@@ -284,8 +353,7 @@ void liftControl()
 		else
 		{
 			frontLift.move(0);
-			if(backLift.get_position() > -50 && !disableAll) {backLift.move(-100);}
-			else {backLift.move(0);}
+			backLift.move(0);
 		}
 	}
 }
@@ -391,9 +459,7 @@ void printInfo()
 // main auton function
 void autonomous()
 {
-	rotate(90, CW);
-	drive(500.0);
-	drive(-500.0);
+	blah();
 	// frontLift.move(127);
 	// frontLift.move(-127);
 	// backPneu.toggle();
@@ -421,24 +487,25 @@ void opcontrol()
 
 	con.clear();
 	chas.changeBrake(chas.COAST);
+	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-	checkInertial();
-	autonomous();
-	// while (true)
-	// {
-	// 	// Drive loop (there's an arcadeDrive() function and tankDrive() function.
-	// 	arcadeDrive();
-	// 	liftControl();
-	// 	pneumaticControl();
-	// 	reverseToggle();
-	// 	brakeType();
-	// 	autoBrakeMode();
-	// 	killAllAuto();
-	//
-	// 	// print information to controller
-	// 	printInfo();
-	//
-	// 	pros::delay(10);
-	// 	globalTime += 10;
-	// }
+	while (true)
+	{
+		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
+		arcadeDrive();
+		liftControl();
+		pneumaticControl();
+		reverseToggle();
+		brakeType();
+		autoBrakeMode();
+		killAllAuto();
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+			autonomous();
+	
+		// print information to controller
+		printInfo();
+	
+		pros::delay(10);
+		globalTime += 10;
+	}
 }
