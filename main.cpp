@@ -64,7 +64,7 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 	double error = 0.0;
 	double integral = 0.0;
 
-	float kP = (targetEnc >= 0 ? 5 : -5);
+	float kP = (targetEnc >= 0) ? (5) : (-5);
 
 	con.clear();
 
@@ -107,7 +107,6 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 				break;
 			}
 		}
-		
 		else
 		{
 			withinRange = false;
@@ -122,14 +121,9 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 		if(slewMult < 1) {slewMult += 0.05;}
 	}
 	// Stop robot after loop
+	chas.changeBrake(chas.HOLD);
 	chas.stop();
 }
-
-
-
-
-
-
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
 void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
@@ -144,7 +138,7 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 		inert.set_heading(350);
 	else if(degrees > 0)
 		inert.set_heading(10);
-    else
+        else
 		return;
 
 	//double globalHeading = inert.get_heading();
@@ -153,7 +147,7 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 
 	double error = targetHeading - currentRotation;
 	double lastError = error;
-	double intergral = 0.0;
+	double integral = 0.0;
 	double derivative = 0.0;
 
 	double speed = 0.0;
@@ -163,8 +157,10 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 	float kD = 2;
 
 	bool integ = false;
+	bool withinRange = false;
+	int withinRangeTime = 0;
 
-	while(true)
+	while(timeout > time)
 	{
 		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", error);}
 		currentRotation = inert.get_heading();
@@ -182,20 +178,35 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 		{
 			integ = true;
 		}
-		if(integ) { intergral += error; }
+		if(integ) { integral += error; }
 		derivative = lastError - error;
-		speed = error * kP + intergral * kI + derivative * kD;
+		speed = (error * kP) + (integral * kI) + (derivative * kD);
 
 		chas.spinLeft(speed);
 		chas.spinRight(-speed);
+		
+		if(abs(error) <= 0.5)
+		{
+			if(!withinRange)
+		 	{
+				withinRangeTime = time;
+				withinRange = true;
+			}
+			else if(time >= withinRangeTime + 300)
+			{
+				break;
+			}
+		}
+		else
+		{
+			withinRange = false;
+		}
 
 		// delay while loop
 		pros::delay(5);
 		time += 5;
-		// check timeout
-		if(timeout <= time)
-			break;
 	}
+	// Stop robot after loop 
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
 }
@@ -303,7 +314,6 @@ void autoBrakeMode()	//automatically sets brake mode
 }
 
 // lifts
-
 void liftControl()
 {
 	// Check if 'X' is being pressed and set back lift to coast if it is
@@ -413,13 +423,13 @@ void killAllAuto()
 void printInfo()
 {
 	static int counter = 0;
-	if(counter == 5)
+	if(counter == 10)
 	{
 		//print whether the chassis controls are reversed or not
 		if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 		else {con.set_text(0,0, "Chas: REVERSE");}
 	}
-	if(counter == 10)
+	if(counter == 20)
 	{
 		//print the brake type for the chassis
 		if(disableAuto)
@@ -433,7 +443,7 @@ void printInfo()
 			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
 		}
 	}
-	if(counter == 15)
+	if(counter == 30)
 	{
 		//prints the temperature of the chassis
 
@@ -505,7 +515,7 @@ void opcontrol()
 		// print information to controller
 		printInfo();
 	
-		pros::delay(10);
-		globalTime += 10;
+		pros::delay(5);
+		globalTime += 5;
 	}
 }
