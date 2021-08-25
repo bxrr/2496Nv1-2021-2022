@@ -32,11 +32,44 @@ void checkInertial(int lineNum=1)
 	}
 }
 
+bool autonCurrentlySelecting = true;
 void autonSelector()
 {
-	int auton = 1;
-
-	if {con.}
+	int auton = 1
+	con.set_text(0,0, "Select Auton:");
+	if (con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+	    {
+		con.clear();
+		if(auton == 5){auton = 1;}
+		else{auton++;}
+		while (con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)){}
+	    }
+	else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+	    {
+		con.clear();
+		if(auton == 0){auton = 5;}
+		else{auton--;}
+		while (con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)){}
+	    }
+	if (auton == 1){con.set_text(1,0, "Red 1");}
+	else if (auton == 2){con.set_text(1,0, "Red 2");}
+	else if (auton == 3){con.set_text(1,0, "Blue 1");}
+	else if (auton == 4){con.set_text(1,0, "Blue 2");}
+	else if (auton == 5){con.set_text(1,0, "Skills");}
+	
+	if (con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+	    {
+		con.clear; 
+		con.set_text(1,0, "Selected:");
+		if (auton == 1){con.set_text(1,0, "Red 1");}
+		else if (auton == 2){con.set_text(1,0, "Red 2");}
+		else if (auton == 3){con.set_text(1,0, "Blue 1");}
+		else if (auton == 4){con.set_text(1,0, "Blue 2");}
+		else if (auton == 5){con.set_text(1,0, "Skills");}
+		autonCurrentlySelecting = false;
+		break;
+	    }
+	
 }
 
 
@@ -428,63 +461,94 @@ void killAllAuto()
 // opControl/auton functions
 void printInfo()
 {
-	static int counter = 0;
-	if(counter == 10)
+	if(globalTime > 2000)
 	{
-		//print whether the chassis controls are reversed or not
-		if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
-		else {con.set_text(0,0, "Chas: REVERSE");}
-	}
-	if(counter == 20)
-	{
-		//print the brake type for the chassis
-		if(disableAuto)
+		static int counter = 0;
+		if(counter == 10)
 		{
-			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
-			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
+			//print whether the chassis controls are reversed or not
+			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
+			else {con.set_text(0,0, "Chas: REVERSE");}
 		}
-		else
+		if(counter == 20)
 		{
-			if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
-			else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
-		}
-	}
-	if(counter == 30)
-	{
-		//prints the temperature of the chassis
-
-		if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
-		else 
-		{
-			if((chas.leftTemp() + chas.rightTemp()) /2 > 53)
+			//print the brake type for the chassis
+			if(disableAuto)
 			{
-				con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake Mode: COAST");}
+				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake Mode : HOLD");}
 			}
 			else
 			{
-				//con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-				if(backLift.get_brake_mode() == pros::E_MOTOR_BRAKE_HOLD)
-					con.print(2, 0, "Global: %.2f", globalRotation);
-				else
-					con.clear();
+				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
+				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
 			}
 		}
+		if(counter == 30)
+		{
+			//prints the temperature of the chassis
 
-		//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
-		counter = 0;
+			if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
+			else 
+			{
+				if((chas.leftTemp() + chas.rightTemp()) /2 > 53)
+				{
+					con.print(2, 0, "Chassis(HOT): %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+				}
+				else
+				{
+					//con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+					if(backLift.get_brake_mode() == pros::E_MOTOR_BRAKE_HOLD)
+						con.print(2, 0, "Global: %.2f", globalRotation);
+					else
+						con.clear();
+				}
+			}
+
+			//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
+			counter = 0;
+		}
+		counter++;
 	}
-	counter++;
 }
 
 // main auton function
 void autonomous()
 {
+	if (auton == 1){Red1;}
+	else if (auton == 2){Red2;}
+	else if (auton == 3){Blue1;}
+	else if (auton == 4){Blue2;}
+	else {Skills;}
+	
+	void Red1()
+	{
+	
+	}
+	void Red2()
+	{
+	
+	}
+	void Blue1()
+	{
+	
+	}
+	void Blue2()
+	{
+	
+	}
+	void Skills()
+	{
+	
+	}
+	/*
 	backLift.move_absolute(-1500, -100);
 	pros::delay(1000);
 	drive(-150);
 	backLift.move_absolute(-1200, 100);
 	pros::delay(1000);
 	drive(-350);
+	*/
 }
 
 // main control functions ======================================================
@@ -505,7 +569,9 @@ void competition_initialize() {}
 
 void opcontrol()
 {
-	pros::lcd::set_text(0, "among us");
+	pros::lcd::set_text(0, "the impostor from among us is in ur code");
+	inert.reset();
+	while(autonCurrentlySelecting){autonSelector();}
 
 	con.clear();
 	chas.changeBrake(chas.COAST);
@@ -513,6 +579,7 @@ void opcontrol()
 
 	while (true)
 	{
+		
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 		arcadeDrive();
 		liftControl();
