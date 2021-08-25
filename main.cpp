@@ -17,6 +17,7 @@ pros::Controller con(pros::E_CONTROLLER_MASTER);
 
 int globalTime;		//time since code has initialized, used as a timer
 bool disableAll = false;
+double globalRotation = 0;
 
 // misc functions ==============================================================
 void checkInertial(int lineNum=1)
@@ -71,7 +72,7 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 	// Drive loop, might add a timeout thing if it's needed
 	while(timeout > time)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", distError);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", globalRotation);}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
 		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * 0.6) ? (targetEnc > 0 ? 127 * 0.6 : -127 * 0.6) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
@@ -123,10 +124,12 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 	// Stop robot after loop
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
+	globalRotation += inert.get_heading() - initialRotation;
 }
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
-void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
+
+void rotate(double degrees, rotateDirection dir=CW)
 {
 	if(dir == CCW)
 		degrees = -degrees;
@@ -138,12 +141,13 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 		inert.set_heading(350);
 	else if(degrees > 0)
 		inert.set_heading(10);
-        else
+    else
 		return;
 
 	//double globalHeading = inert.get_heading();
 	double targetHeading = inert.get_heading() + degrees;
 	double currentRotation = inert.get_heading();
+	double initialRotation = inert.get_heading();
 
 	double error = targetHeading - currentRotation;
 	double lastError = error;
@@ -152,7 +156,7 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 
 	double speed = 0.0;
 
-	float kP = 1.5;
+	float kP = 1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees));
 	float kI = 0.1;
 	float kD = 2;
 
@@ -160,9 +164,9 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 	bool withinRange = false;
 	int withinRangeTime = 0;
 
-	while(timeout > time)
+	while(true)					//timeout disabled
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", error);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", globalRotation);}
 		currentRotation = inert.get_heading();
 
 		/*
@@ -174,7 +178,7 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 
 		lastError = error;
 		error = targetHeading - currentRotation;
-		if(error <= 1)
+		if(abs(error) <= 1)
 		{
 			integ = true;
 		}
@@ -209,13 +213,23 @@ void rotate(double degrees, int timeout=3000, rotateDirection dir=CW)
 	// Stop robot after loop 
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
+	globalRotation += inert.get_heading() - initialRotation;
 }
+
+
+void rotateTo(double degrees, rotateDirection dir = CW) { rotate(degrees - globalRotation, dir); }
 
 
 
 void blah()
 {
-	rotate(90, 10000);
+	drive(500);
+	rotateTo(-90);
+	drive(300);
+	drive(-300);
+	rotateTo(0);
+	drive(-500);
+
 }
 
 // driver control functions ====================================================
@@ -456,7 +470,11 @@ void printInfo()
 			}
 			else
 			{
-				con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+				//con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
+				if(backLift.get_brake_mode() == pros::E_MOTOR_BRAKE_HOLD)
+					con.print(2, 0, "Global: %.2f", globalRotation);
+				else
+					con.clear();
 			}
 		}
 
