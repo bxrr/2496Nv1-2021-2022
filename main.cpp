@@ -32,7 +32,12 @@ void checkInertial(int lineNum=1)
 	}
 }
 
+void autonSelector()
+{
+	int auton = 1;
 
+	if {con.}
+}
 
 
 
@@ -218,19 +223,6 @@ void rotate(double degrees, rotateDirection dir=CW)
 
 
 void rotateTo(double degrees, rotateDirection dir = CW) { rotate(degrees - globalRotation, dir); }
-
-
-
-void blah()
-{
-	drive(500);
-	rotateTo(-90);
-	drive(300);
-	drive(-300);
-	rotateTo(0);
-	drive(-500);
-
-}
 
 // driver control functions ====================================================
 void arcadeDrive()
@@ -462,7 +454,7 @@ void printInfo()
 		//prints the temperature of the chassis
 
 		if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
-		else
+		else 
 		{
 			if((chas.leftTemp() + chas.rightTemp()) /2 > 53)
 			{
@@ -487,10 +479,12 @@ void printInfo()
 // main auton function
 void autonomous()
 {
-	blah();
-	// frontLift.move(127);
-	// frontLift.move(-127);
-	// backPneu.toggle();
+	backLift.move_absolute(-1500, -100);
+	pros::delay(1000);
+	drive(-150);
+	backLift.move_absolute(-1200, 100);
+	pros::delay(1000);
+	drive(-350);
 }
 
 // main control functions ======================================================
@@ -511,7 +505,7 @@ void competition_initialize() {}
 
 void opcontrol()
 {
-	pros::lcd::set_text(0, "running");
+	pros::lcd::set_text(0, "among us");
 
 	con.clear();
 	chas.changeBrake(chas.COAST);
