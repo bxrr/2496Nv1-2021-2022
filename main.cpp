@@ -33,49 +33,53 @@ void checkInertial(int lineNum=1)
 }
 
 bool autonCurrentlySelecting = true;
+int autonNum = 1;
 void autonSelector()
 {
-	int auton = 1
-	con.set_text(0,0, "Select Auton:");
+	static bool firstTime = true;
+	static int localTime = 0;
+	if(localTime > 100) {localTime = 0;}
+	if(localTime == 50) {con.set_text(0,0, "Select Auton:");}
+
 	if (con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-	    {
+	{
 		con.clear();
-		if(auton == 5){auton = 1;}
-		else{auton++;}
+		if(autonNum == 6){autonNum = 1;}
+		else{autonNum++;}
 		while (con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)){}
-	    }
+	}
 	else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
-	    {
+	{
 		con.clear();
-		if(auton == 0){auton = 5;}
-		else{auton--;}
+		if(autonNum == 0){autonNum = 6;}
+		else{autonNum--;}
 		while (con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)){}
-	    }
-	if (auton == 1){con.set_text(1,0, "Red 1");}
-	else if (auton == 2){con.set_text(1,0, "Red 2");}
-	else if (auton == 3){con.set_text(1,0, "Blue 1");}
-	else if (auton == 4){con.set_text(1,0, "Blue 2");}
-	else if (auton == 5){con.set_text(1,0, "Skills");}
+	}
 	
+	if(localTime ==100) 
+	{
+		if (autonNum == 1){con.set_text(1,0, "Red  1");}
+		else if (autonNum == 2){con.set_text(1,0, "Red  2");}
+		else if (autonNum == 3){con.set_text(1,0, "Blue 1");}
+		else if (autonNum == 4){con.set_text(1,0, "Blue 2");}
+		else if (autonNum == 5){con.set_text(1,0, "Skills");}
+		else if(autonNum == 6) {con.set_text(1,0, "None");}
+ 	}
+
 	if (con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
-	    {
-		con.clear; 
-		con.set_text(1,0, "Selected:");
-		if (auton == 1){con.set_text(1,0, "Red 1");}
-		else if (auton == 2){con.set_text(1,0, "Red 2");}
-		else if (auton == 3){con.set_text(1,0, "Blue 1");}
-		else if (auton == 4){con.set_text(1,0, "Blue 2");}
-		else if (auton == 5){con.set_text(1,0, "Skills");}
+	{
 		autonCurrentlySelecting = false;
-		break;
-	    }
+	}
+
+	localTime += 5;
+	pros::delay(5);
 	
 }
 
 
 
 // auton functions =============================================================
-void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
+void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
 {
 	// Timeout counter
 	int time = 0;
@@ -113,7 +117,7 @@ void drive(double targetEnc, int timeout = 4000) // timeout in milliseconds
 		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", globalRotation);}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
-		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * 0.6) ? (targetEnc > 0 ? 127 * 0.6 : -127 * 0.6) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
+		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
 		if(distError < -3)
 		{
 			baseSpeed = (baseSpeed > -15) ? (-15) : (baseSpeed);
@@ -461,7 +465,13 @@ void killAllAuto()
 // opControl/auton functions
 void printInfo()
 {
-	if(globalTime > 2000)
+	if(globalTime < 2000)
+	{
+		if(globalTime % 50 == 0)
+		{ con.set_text(0,0, "Selected:       "); }
+	}
+
+	else
 	{
 		static int counter = 0;
 		if(counter == 10)
@@ -497,11 +507,7 @@ void printInfo()
 				}
 				else
 				{
-					//con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
-					if(backLift.get_brake_mode() == pros::E_MOTOR_BRAKE_HOLD)
-						con.print(2, 0, "Global: %.2f", globalRotation);
-					else
-						con.clear();
+					con.print(2, 0, "Chassis: %.0f°C", ((chas.leftTemp() + chas.rightTemp()) / 2));
 				}
 			}
 
@@ -512,35 +518,46 @@ void printInfo()
 	}
 }
 
-// main auton function
+//autonomous functions
+void red1()
+{
+	backLift.move_relative(-1500, -127);
+	drive(-460, 2500, 1);
+	rotate(-90);
+	drive(-200);
+	backPneu.toggle();
+	rotate(45);
+	drive(300);
+}
+void red2()
+{
+
+}
+void blue1()
+{
+
+}
+void blue2()
+{
+
+}
+void skills()
+{
+
+}
+
+//autonomous(will be called by competition)
 void autonomous()
 {
-	if (auton == 1){Red1;}
-	else if (auton == 2){Red2;}
-	else if (auton == 3){Blue1;}
-	else if (auton == 4){Blue2;}
-	else {Skills;}
 	
-	void Red1()
-	{
+	if (autonNum == 1){red1();}
+	if (autonNum == 2){red2();}
+	if (autonNum == 3){blue1();}
+	if (autonNum == 4){blue2();}
+	if (autonNum == 5){skills();}
 	
-	}
-	void Red2()
-	{
 	
-	}
-	void Blue1()
-	{
 	
-	}
-	void Blue2()
-	{
-	
-	}
-	void Skills()
-	{
-	
-	}
 	/*
 	backLift.move_absolute(-1500, -100);
 	pros::delay(1000);
@@ -570,10 +587,9 @@ void competition_initialize() {}
 void opcontrol()
 {
 	pros::lcd::set_text(0, "the impostor from among us is in ur code");
-	inert.reset();
+	con.clear();
 	while(autonCurrentlySelecting){autonSelector();}
 
-	con.clear();
 	chas.changeBrake(chas.COAST);
 	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
