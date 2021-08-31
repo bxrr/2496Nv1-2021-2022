@@ -9,6 +9,6 @@
 // Other
 #define BACK_LIFT_PORT 12
 #define FRONT_LIFT_PORT 20
-#define BACK_PNEUMATIC_PORT 'A'
-#define FRONT_PNEUMATIC_PORT 'B'
+#define BACK_PNEUMATIC_PORT 'B'
+#define FRONT_PNEUMATIC_PORT 'A'
 #define INERT_PORT 19

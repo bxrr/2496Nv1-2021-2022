@@ -79,6 +79,8 @@ void autonSelector()
 
 
 // auton functions =============================================================
+double goalsPossessed = 1;
+
 void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
 {
 	// Timeout counter
@@ -108,6 +110,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 	double integral = 0.0;
 
 	float kP = (targetEnc >= 0) ? (5) : (-5);
+	kP *= (1 + goalsPossessed/3);
 
 	con.clear();
 
@@ -198,7 +201,8 @@ void rotate(double degrees, rotateDirection dir=CW)
 
 	double speed = 0.0;
 
-	float kP = 1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees));
+	double rotateStartI = goalsPossessed + (1 + goalsPossessed/4);
+	float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees))) * (1 + goalsPossessed/2);
 	float kI = 0.1;
 	float kD = 2;
 
@@ -206,10 +210,18 @@ void rotate(double degrees, rotateDirection dir=CW)
 	bool withinRange = false;
 	int withinRangeTime = 0;
 
+	int sameErrorCount = 0;
+	double errorCheck;
+
 	while(true)					//timeout disabled
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", globalRotation);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %.3f", error);}
 		currentRotation = inert.get_heading();
+
+		if(time % 200 == 0)
+		{
+			errorCheck = error;
+		}
 
 		/*
 		if(dir == CW)
@@ -220,10 +232,19 @@ void rotate(double degrees, rotateDirection dir=CW)
 
 		lastError = error;
 		error = targetHeading - currentRotation;
-		if(abs(error) <= 1)
+		if(abs(error) <= rotateStartI)
 		{
 			integ = true;
 		}
+		else if(abs(errorCheck - error) < 0.0001 && error < 5)
+		{
+			sameErrorCount++;
+		}
+		else
+		{
+			sameErrorCount = 0;
+		}
+
 		if(integ) { integral += error; }
 		derivative = lastError - error;
 		speed = (error * kP) + (integral * kI) + (derivative * kD);
@@ -384,7 +405,7 @@ void liftControl()
 			}
 			else
 			{
-				if(backLift.get_position() < -100 || disableAll) {backLift.move(100);}
+				backLift.move(127);
 				frontLift.move(0);
 			}
 		}
@@ -398,7 +419,7 @@ void liftControl()
 			}
 			else
 			{
-				if(backLift.get_position() > -1500 || disableAll) {backLift.move(-100);}
+				backLift.move(-127);
 				frontLift.move(0);
 			}
 		}
@@ -519,23 +540,39 @@ void printInfo()
 }
 
 //autonomous functions
+//drive(enc, timeout, pct power)
+//rotate(degrees, direction)
+
+
 void red1()
 {
-	backLift.move_relative(-1500, -127);
-	drive(-460, 2500, 1);
+	backLift.move_relative(-3000, -127);
+	pros::delay(400);
+	drive(-470, 2500);
+	backLift.move_absolute(0, 127);	
+	goalsPossessed++;
+	pros::delay(300);			
+	drive(250);
+	rotateTo(-45);
+	drive(-360);
+	backPneu.toggle();
+	drive(-15, 1000);
+	goalsPossessed++;
+	rotateTo(-60);
+	drive(450);
+	frontPneu.toggle();
+	drive(-100, 1000);
 	rotate(-90);
 	drive(-200);
-	backPneu.toggle();
-	rotate(45);
-	drive(300);
 }
 void red2()
 {
-
+	drive(180);
+	frontPneu.toggle();
 }
 void blue1()
 {
-
+	rotate(90);
 }
 void blue2()
 {
