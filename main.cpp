@@ -446,7 +446,7 @@ void pneumaticControl()
 			// Check if this is R1's initial press, and toggle the pneumatic if it is.
 			if(firstPress1)
 			{
-				frontPneu.toggle();
+				backPneu.toggle();
 				firstPress1 = false;
 			}
 		}
@@ -462,7 +462,7 @@ void pneumaticControl()
 			// Check if this is R2's initial press, and toggle the pneumatic if it is.
 			if(firstPress2)
 			{
-				backPneu.toggle();
+				frontPneu.toggle();
 				firstPress2 = false;
 			}
 		}
