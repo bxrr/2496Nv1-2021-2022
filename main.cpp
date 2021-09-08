@@ -79,7 +79,7 @@ void autonSelector()
 
 
 // auton functions =============================================================
-double goalsPossessed = 1;
+double goalsPossessed = 0;
 
 void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
 {
@@ -174,7 +174,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
 
-void rotate(double degrees, rotateDirection dir=CW)
+void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
 {
 	if(dir == CCW)
 		degrees = -degrees;
@@ -213,9 +213,9 @@ void rotate(double degrees, rotateDirection dir=CW)
 	int sameErrorCount = 0;
 	double errorCheck;
 
-	while(true)					//timeout disabled
+	while(true)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %.3f", error);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %d", time);}
 		currentRotation = inert.get_heading();
 
 		if(time % 200 == 0)
@@ -269,6 +269,8 @@ void rotate(double degrees, rotateDirection dir=CW)
 			withinRange = false;
 		}
 
+		if(time > timeout) {break;}
+
 		// delay while loop
 		pros::delay(5);
 		time += 5;
@@ -280,7 +282,7 @@ void rotate(double degrees, rotateDirection dir=CW)
 }
 
 
-void rotateTo(double degrees, rotateDirection dir = CW) { rotate(degrees - globalRotation, dir); }
+void rotateTo(double degrees, int timeout=100000, rotateDirection dir = CW) { rotate(degrees - globalRotation, timeout, dir); }
 
 // driver control functions ====================================================
 void arcadeDrive()
@@ -547,23 +549,24 @@ void printInfo()
 void red1()
 {
 	backLift.move_relative(-3000, -127);
-	pros::delay(400);
+	pros::delay(300);
 	drive(-470, 2500);
 	backLift.move_absolute(0, 127);	
 	goalsPossessed++;
 	pros::delay(300);			
 	drive(250);
 	rotateTo(-45);
-	drive(-360);
+	drive(-340, 2000, 0.8);
+	drive(-25, 1000, 1);
 	backPneu.toggle();
-	drive(-15, 1000);
 	goalsPossessed++;
-	rotateTo(-60);
-	drive(450);
+	rotateTo(-60, 1500);
+	drive(445, 2500, 1);
 	frontPneu.toggle();
-	drive(-100, 1000);
+	goalsPossessed++;
+	drive(-100, 2000, 1);
 	rotate(-90);
-	drive(-200);
+	drive(-200, 1000, 1);
 }
 void red2()
 {
