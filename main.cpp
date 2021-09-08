@@ -398,7 +398,7 @@ void liftControl()
 		// Move lift up
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
 		{
-			if(front)
+			if(front && frontLift.get_position() < 0)
 			{
 				frontLift.move(-127);
 				backLift.move(0);
@@ -412,7 +412,7 @@ void liftControl()
 		// Move lift down
 		else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
 		{
-			if(front)
+			if(front && frontLift.get_position() > -3000)
 			{
 				frontLift.move(127);
 				backLift.move(0);
