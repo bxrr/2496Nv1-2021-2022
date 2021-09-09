@@ -335,7 +335,7 @@ void brakeType()
 		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {}
 	}
 	//disable automatic brake mode selection if manual selection has been made within 10 sec
-	if(!(startTime == 0)) {globalTime - startTime < 8000 ? disableAuto = true : disableAuto = false;}
+	if(!(startTime == 0) && !disableAll) {globalTime - startTime < 8000 ? disableAuto = true : disableAuto = false;}
 }
 
 void autoBrakeMode()	//automatically sets brake mode
@@ -379,7 +379,23 @@ void autoBrakeMode()	//automatically sets brake mode
 	}
 }
 
+
+void autoPark()
+{
+	static bool aPark = false;
+	static int goalsPossessed = 0;
+	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_B)) 
+	{
+		disableAuto = true;
+		aPark = true;
+	}
+
+	if (aPark) {chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 5 + goalsPossessed);}
+}
+
+
 // lifts
+bool front = true;
 void liftControl()
 {
 	// Check if 'X' is being pressed and set back lift to coast if it is
@@ -393,14 +409,14 @@ void liftControl()
 	{
 
 		// Check L1 to see if driver wants to control front lift or back lift
-		bool front = true;
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
-			front = false;
+		
+		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {front = false;}
+		else {front = true;}
 
 		// Move lift up
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
 		{
-			if(front && frontLift.get_position() < 0)
+			if(front)
 			{
 				frontLift.move(-127);
 				backLift.move(0);
@@ -414,7 +430,7 @@ void liftControl()
 		// Move lift down
 		else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
 		{
-			if(front && frontLift.get_position() > -3000)
+			if(front)
 			{
 				frontLift.move(127);
 				backLift.move(0);
@@ -644,6 +660,7 @@ void opcontrol()
 		brakeType();
 		autoBrakeMode();
 		killAllAuto();
+		autoPark();
 		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
 			autonomous();
 	

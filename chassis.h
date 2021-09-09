@@ -68,7 +68,7 @@ public:
     }
 
     enum brakeTypes {COAST, HOLD, S_HOLD}; // special hold applies motor speed to prevent the robot from moving.
-    void changeBrake(brakeTypes bT, double inertialv = 0)
+    void changeBrake(brakeTypes bT, double inertialv = 0, double kP = 1.2)
     {
       if(bT == COAST)
       {
@@ -91,11 +91,10 @@ public:
 
       else
       {
-        float k;
-        reverse ? (k = -1.2) : (k = 1.2);
+        if (reverse) {kP = -kP;}
 
-        spinLeft(inertialv*k);
-        spinRight(inertialv*k);
+        spinLeft(inertialv*kP);
+        spinRight(inertialv*kP);
 
         backLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         backRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -151,8 +150,8 @@ public:
     double leftTemp()
     {
       return (backLeft.get_temperature() +
-              midLeft.get_temperature() +
-              frontLeft.get_temperature()) / 3;
+              frontLeft.get_temperature()) / 2;
+              
     }
 
     double rightTemp()
