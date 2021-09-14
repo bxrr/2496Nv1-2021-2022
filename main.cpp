@@ -302,7 +302,7 @@ void arcadeAuto()									//arcade drive with autostraight drive assist
 {
 	static double inertialStart;					//starting inertial heading when driving straight
 	static bool autoStraight = false; 				//boolean checking whether to implement autostraight assist
-	double kpAuto = chas.getVelocity() > 0 ? 0.02 : -0.02;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
+	double kPauto = chas.getVelocity() > 0 ? 0.02 : -0.02;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
 			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
@@ -321,6 +321,8 @@ void arcadeAuto()									//arcade drive with autostraight drive assist
 					inert.set_heading(180);					//reset inertial valu
 					inertialStart = inert.get_heading();	//set initial inertial value, this part of the loop will not be executed again until autostraight is reset
 				}
+			}
+
 			else 
 			{
 				autoStraight = false;			//disable autostraight calculations because turning is true
