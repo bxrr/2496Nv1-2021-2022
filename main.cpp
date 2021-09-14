@@ -2,7 +2,6 @@
 #include "chassis.h"
 #include "ports.h"
 #include "piston.h"
-#include <iostream>
 
 #include <string.h>
 
@@ -282,7 +281,7 @@ void rotateTo(double degrees, int timeout=100000, rotateDirection dir = CW) { ro
 
 // driver control functions ====================================================
 
-void arcadeDrive()
+void arcadeDrive()			//fully manual arcade drive
 {
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
@@ -299,30 +298,38 @@ void arcadeDrive()
 
 
 double autoStraightVal = 0;
-void arcadeAuto()
+void arcadeAuto()									//arcade drive with autostraight drive assist
 {
-	static double inertialStart;
-	static bool autoStraight = false;
-	double kpAuto = con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) > 0 ? 0.02 : -0.02;
+	static double inertialStart;					//starting inertial heading when driving straight
+	static bool autoStraight = false; 				//boolean checking whether to implement autostraight assist
+	double kpAuto = chas.getVelocity() > 0 ? 0.02 : -0.02;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
 			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-			if(abs(turnStick) < 10 && !autoStraight) 
+			if(abs(turnStick) < 10) 		//if not turning(initiate autostraight)
 			{
-				autoStraight = true;
-				inert.set_heading(180);
-				inertialStart = inert.get_heading();
-			}
-			else if(abs(turnStick) > 10) {autoStraight = false;}
+				if(autoStraight) 			//if autostraight enabled, calculate error
+				{
+					autoStraightVal = inert.get_heading() - inertialStart;
 
-			if(autoStraight) 
+					if(autoStraightVal > 10) {autoStraight = false;} 		//if there is a big unexpected jerk, ie if the robot is hit by an external object, reset autostraight
+				}
+				
+				else
+				{
+					autoStraight = true;					//since driving straight, set autostraight to true
+					inert.set_heading(180);					//reset inertial valu
+					inertialStart = inert.get_heading();	//set initial inertial value, this part of the loop will not be executed again until autostraight is reset
+				}
+			else 
 			{
-				autoStraightVal = inert.get_heading() - inertialStart;
+				autoStraight = false;			//disable autostraight calculations because turning is true
+				autoStraightVal = 0;			//disable effect of autostraight
 			}
-			else {autoStraightVal = 0;}
 
-			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal*kPauto)*con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal*kPauto)*con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+			//chas controls(take the vertical stick +- the turn stick and apply autostraight effect, if autoStraightVal = 0, then autostraight is disabled)
+			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal*kPauto)*chas.getVelocity());
+			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal*kPauto)*chas.getVelocity());
 	}
 	else
 	{

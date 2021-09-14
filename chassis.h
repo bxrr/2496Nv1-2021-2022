@@ -117,14 +117,17 @@ public:
 
     double getLeftPos() // Returns the current average encoding of all the left chassis motors
     {
-      std::cout << "f: " << frontLeft.get_position() << ", " << midLeft.get_position() << ", " << backLeft.get_position() << std::endl;
       return (frontLeft.get_position());
     }
 
     double getRightPos() // Returns the current average encoding of all the right chassis motors
     {
-      std::cout << "b: " << frontLeft.get_position() << ", " << midLeft.get_position() << ", " << backLeft.get_position() << std::endl;
       return (frontRight.get_position());
+    }
+
+    double getVelocity()
+    {
+      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midRight.get_actual_velocity() + midLeft.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
     }
 
     // Chassis reverse control ===================================================
