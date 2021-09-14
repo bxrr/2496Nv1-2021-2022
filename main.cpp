@@ -2,6 +2,7 @@
 #include "chassis.h"
 #include "ports.h"
 #include "piston.h"
+#include <iostream>
 
 #include <string.h>
 
@@ -96,7 +97,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 	double currentPos = 0.0;
 	double baseSpeed = 0.0;
 
-	float distKp = 1.5;
+	float distKp = 0.1;
 
 	bool withinRange = false;
 	int withinRangeTime = 0;
@@ -117,18 +118,13 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 	// Drive loop, might add a timeout thing if it's needed
 	while(timeout > time)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", globalRotation);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", (distError));}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
-		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
+		distError = targetEnc + (rightStartPos - chas.getRightPos());
 		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
-		if(distError < -3)
-		{
-			baseSpeed = (baseSpeed > -15) ? (-15) : (baseSpeed);
-		}
-		else if(distError > 3)
-		{
-			baseSpeed = (baseSpeed < 15) ? (15) : (baseSpeed);
-		}
+	
+		//200 - (negative + )
+
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 		
 
@@ -285,19 +281,55 @@ void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
 void rotateTo(double degrees, int timeout=100000, rotateDirection dir = CW) { rotate(degrees - globalRotation, timeout, dir); }
 
 // driver control functions ====================================================
+
 void arcadeDrive()
 {
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
+		double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+		chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick);
+		chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick);
+	}
+	else
+	{
+	chas.stop();
+	}
+}
+
+
+
+double autoStraightVal = 0;
+void arcadeAuto()
+{
+	static double inertialStart;
+	static bool autoStraight = false;
+	double kpAuto = con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) > 0 ? 0.02 : -0.02;
+	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
+	{
 			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick);
-			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick);
+			if(abs(turnStick) < 10 && !autoStraight) 
+			{
+				autoStraight = true;
+				inert.set_heading(180);
+				inertialStart = inert.get_heading();
+			}
+			else if(abs(turnStick) > 10) {autoStraight = false;}
+
+			if(autoStraight) 
+			{
+				autoStraightVal = inert.get_heading() - inertialStart;
+			}
+			else {autoStraightVal = 0;}
+
+			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal*kPauto)*con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal*kPauto)*con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
 	}
 	else
 	{
 		chas.stop();
 	}
 }
+
 
 void tankDrive()
 {
@@ -504,6 +536,8 @@ void killAllAuto()
 // opControl/auton functions
 void printInfo()
 {
+	chas.getLeftPos();
+	chas.getRightPos();
 	if(globalTime < 2000)
 	{
 		if(globalTime % 50 == 0)
@@ -512,15 +546,20 @@ void printInfo()
 
 	else
 	{
+
 		static int counter = 0;
 		if(counter == 10)
 		{
 			//print whether the chassis controls are reversed or not
+			/*
 			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 			else {con.set_text(0,0, "Chas: REVERSE");}
+			*/
+			con.print(0,0,"Autoval: %.1f", autoStraightVal);
 		}
 		if(counter == 20)
 		{
+			/*
 			//print the brake type for the chassis
 			if(disableAuto)
 			{
@@ -532,6 +571,9 @@ void printInfo()
 				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
 				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
 			}
+			*/
+			con.print(1,0, "Inert: %.1f", inert.get_heading());
+			
 		}
 		if(counter == 30)
 		{
@@ -562,6 +604,7 @@ void printInfo()
 //rotate(degrees, direction)
 
 
+
 void red1()
 {
 	backLift.move_relative(-3000, -127);
@@ -586,7 +629,7 @@ void red1()
 }
 void red2()
 {
-	drive(180);
+	drive(500);
 	frontPneu.toggle();
 }
 void blue1()
