@@ -81,7 +81,56 @@ void autonSelector()
 // auton functions =============================================================
 double goalsPossessed = 0;
 
-void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
+void drive(double travelEnc, int timeout=4000, double maxspeed = 0.6)
+{
+	int time = 0;
+	
+	double targetEnc = chas.getRightPos() + travelEnc;
+	double distError = targetEnc - chas.getRightPos();
+	float distKp = 0.2
+	
+	inert.set_heading(180);
+	double startHeading = inert.get_heading();
+	double error = startHeading - inert.get_heading();
+	float kP = 0.1;
+		
+	bool inRange = false;
+	int inRangeTime = 0;
+	
+	while(timeout >= time)
+	{
+		distError = targetEnc - chas.getRightPos();
+		error = startHeading - inert.get_heading();
+		
+		rightSpeed = distError * distKp;
+		leftSpeed = (distError * distKp) + (error * kP);
+		
+		chas.spinRight(rightSpeed);
+		chas.spinLeft(leftSpeed);
+		
+		if(abs(distError) < 2.0)
+		{
+			if(inRange == false)
+			{
+				inRangeTime = time;
+				inRange = true;
+			}
+			else if(inRangeTime + 300 >= time)
+			{
+				break;
+			}
+		}
+		else
+		{
+			inRange = false;
+		}
+		
+		pros::delay(5);
+		time += 5;
+	}
+}
+
+void drive_(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
 {
 	// Timeout counter
 	int time = 0;
