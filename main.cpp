@@ -81,56 +81,7 @@ void autonSelector()
 // auton functions =============================================================
 double goalsPossessed = 0;
 
-void drive(double travelEnc, int timeout=4000, double maxspeed = 0.6)
-{
-	int time = 0;
-	
-	double targetEnc = chas.getRightPos() + travelEnc;
-	double distError = targetEnc - chas.getRightPos();
-	float distKp = 0.2
-	
-	inert.set_heading(180);
-	double startHeading = inert.get_heading();
-	double error = startHeading - inert.get_heading();
-	float kP = 0.1;
-		
-	bool inRange = false;
-	int inRangeTime = 0;
-	
-	while(timeout >= time)
-	{
-		distError = targetEnc - chas.getRightPos();
-		error = startHeading - inert.get_heading();
-		
-		rightSpeed = distError * distKp;
-		leftSpeed = (distError * distKp) + (error * kP);
-		
-		chas.spinRight(rightSpeed);
-		chas.spinLeft(leftSpeed);
-		
-		if(abs(distError) < 2.0)
-		{
-			if(inRange == false)
-			{
-				inRangeTime = time;
-				inRange = true;
-			}
-			else if(inRangeTime + 300 >= time)
-			{
-				break;
-			}
-		}
-		else
-		{
-			inRange = false;
-		}
-		
-		pros::delay(5);
-		time += 5;
-	}
-}
-
-void drive_(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
+void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
 {
 	// Timeout counter
 	int time = 0;
@@ -145,7 +96,7 @@ void drive_(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeo
 	double currentPos = 0.0;
 	double baseSpeed = 0.0;
 
-	float distKp = 0.1;
+	float distKp = 1.5;
 
 	bool withinRange = false;
 	int withinRangeTime = 0;
@@ -166,13 +117,18 @@ void drive_(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeo
 	// Drive loop, might add a timeout thing if it's needed
 	while(timeout > time)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %.1f", (distError));}
+		if(time % 50 == 0) {con.print(1,0,"error: %.1f", distError);}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
-		distError = targetEnc + (rightStartPos - chas.getRightPos());
+		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
 		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
-	
-		//200 - (negative + )
-
+		if(distError < -3)
+		{
+			baseSpeed = (baseSpeed > -15) ? (-15) : (baseSpeed);
+		}
+		else if(distError > 3)
+		{
+			baseSpeed = (baseSpeed < 15) ? (15) : (baseSpeed);
+		}
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 		
 
@@ -351,15 +307,16 @@ void arcadeAuto()									//arcade drive with autostraight drive assist
 {
 	static double inertialStart;					//starting inertial heading when driving straight
 	static bool autoStraight = false; 				//boolean checking whether to implement autostraight assist
-	double kPauto = chas.getVelocity() > 0 ? 0.02 : -0.02;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
+	double kPauto = chas.getVelocity() > 0 ? 4 : -4;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
+	kPauto = chas.reverseStatus() ? -kPauto : kPauto;
 	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
 	{
 			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-			if(abs(turnStick) < 10) 		//if not turning(initiate autostraight)
+			if(abs(turnStick) < 5) 		//if not turning(initiate autostraight)
 			{
 				if(autoStraight) 			//if autostraight enabled, calculate error
 				{
-					autoStraightVal = inert.get_heading() - inertialStart;
+					autoStraightVal = (inert.get_heading() - inertialStart) * kPauto;
 
 					if(autoStraightVal > 10) {autoStraight = false;} 		//if there is a big unexpected jerk, ie if the robot is hit by an external object, reset autostraight
 				}
@@ -379,12 +336,13 @@ void arcadeAuto()									//arcade drive with autostraight drive assist
 			}
 
 			//chas controls(take the vertical stick +- the turn stick and apply autostraight effect, if autoStraightVal = 0, then autostraight is disabled)
-			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal*kPauto)*chas.getVelocity());
-			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal*kPauto)*chas.getVelocity());
+			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal) * (chas.getVelocity()/127));
+			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal) * (chas.getVelocity()/127));
 	}
 	else
 	{
 		chas.stop();
+		autoStraight = false;
 	}
 }
 
@@ -613,7 +571,7 @@ void printInfo()
 			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 			else {con.set_text(0,0, "Chas: REVERSE");}
 			*/
-			con.print(0,0,"Autoval: %.1f", autoStraightVal);
+			con.print(0,0,"Autoval: %.1f", chas.getVelocity());
 		}
 		if(counter == 20)
 		{
@@ -687,7 +645,7 @@ void red1()
 }
 void red2()
 {
-	drive(500);
+	drive(200);
 	frontPneu.toggle();
 }
 void blue1()

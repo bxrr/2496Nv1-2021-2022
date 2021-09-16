@@ -117,17 +117,17 @@ public:
 
     double getLeftPos() // Returns the current average encoding of all the left chassis motors
     {
-      return (frontLeft.get_position());
+      return (frontLeft.get_position() + midLeft.get_position() + backLeft.get_position()) / 3;
     }
 
     double getRightPos() // Returns the current average encoding of all the right chassis motors
     {
-      return (frontRight.get_position());
+      return (frontRight.get_position() + midRight.get_position() + backRight.get_position()) / 3;
     }
 
     double getVelocity()
     {
-      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midRight.get_actual_velocity() + midLeft.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
+      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midRight.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 5 ;
     }
 
     // Chassis reverse control ===================================================
