@@ -428,17 +428,32 @@ void autoBrakeMode()	//automatically sets brake mode
 }
 
 
-void autoPark()
+void Park()
 {
-	static bool aPark = false;
+	static bool parking = false;
 	static int goalsPossessed = 0;
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_B)) 
+	while(true)
 	{
-		disableAuto = true;
-		aPark = true;
-	}
+		if(abs(inert.get_pitch()) < 6) 
+		{
+			if(parking)
+			{
+				chas.stop();
+			}
 
-	if (aPark) {chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 5 + goalsPossessed);}
+			else
+			{
+				chas.spinLeft(127);
+				chas.spinRight(127);
+			}
+		}
+
+		else 
+		{
+			parking = true;
+			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 4);
+		}
+	}
 }
 
 
