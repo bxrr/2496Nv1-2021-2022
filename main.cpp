@@ -5,15 +5,17 @@
 
 #include <string.h>
 
+using namespace pros;
+
 // Globals
 Chassis chas;
 Piston frontPneu(FRONT_PNEUMATIC_PORT);
 Piston backPneu(BACK_PNEUMATIC_PORT);
-pros::Motor backLift(BACK_LIFT_PORT, pros::E_MOTOR_GEARSET_18, false);
-pros::Motor frontLift(FRONT_LIFT_PORT, pros::E_MOTOR_GEARSET_36, false);
+Motor backLift(BACK_LIFT_PORT, E_MOTOR_GEARSET_18, false);
+Motor frontLift(FRONT_LIFT_PORT, E_MOTOR_GEARSET_36, false);
 
-pros::Imu inert(INERT_PORT);
-pros::Controller con(pros::E_CONTROLLER_MASTER);
+Imu inert(INERT_PORT);
+Controller con(E_CONTROLLER_MASTER);
 
 int globalTime;		//time since code has initialized, used as a timer
 bool disableAll = false;
@@ -24,11 +26,11 @@ void checkInertial(int lineNum=1)
 {
 	while(inert.is_calibrating())
 	{
-		pros::lcd::set_text(lineNum, "inertial is calibrating...");
+		lcd::set_text(lineNum, "inertial is calibrating...");
 	}
-	if(pros::lcd::is_initialized())
+	if(lcd::is_initialized())
 	{
-		pros::lcd::clear_line(lineNum);
+		lcd::clear_line(lineNum);
 	}
 }
 
@@ -41,19 +43,19 @@ void autonSelector()
 	if(localTime > 100) {localTime = 0;}
 	if(localTime == 50) {con.set_text(0,0, "Select Auton:");}
 
-	if (con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+	if (con.get_digital(E_CONTROLLER_DIGITAL_RIGHT))
 	{
 		con.clear();
 		if(autonNum == 6){autonNum = 1;}
 		else{autonNum++;}
-		while (con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)){}
+		while (con.get_digital(E_CONTROLLER_DIGITAL_RIGHT)){}
 	}
-	else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+	else if (con.get_digital(E_CONTROLLER_DIGITAL_LEFT))
 	{
 		con.clear();
 		if(autonNum == 0){autonNum = 6;}
 		else{autonNum--;}
-		while (con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)){}
+		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
 	}
 	
 	if(localTime ==100) 
@@ -66,13 +68,13 @@ void autonSelector()
 		else if(autonNum == 6) {con.set_text(1,0, "None");}
  	}
 
-	if (con.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+	if (con.get_digital(E_CONTROLLER_DIGITAL_A))
 	{
 		autonCurrentlySelecting = false;
 	}
 
 	localTime += 5;
-	pros::delay(5);
+	delay(5);
 	
 }
 
@@ -159,7 +161,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 		}
 		
 		// delay while loop
-		pros::delay(10);
+		delay(10);
 		time += 10;
 		// check timeout
 
@@ -272,7 +274,7 @@ void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
 		if(time > timeout) {break;}
 
 		// delay while loop
-		pros::delay(5);
+		delay(5);
 		time += 5;
 	}
 	// Stop robot after loop 
@@ -284,75 +286,81 @@ void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
 
 void rotateTo(double degrees, int timeout=100000, rotateDirection dir = CW) { rotate(degrees - globalRotation, timeout, dir); }
 
+
 // driver control functions ====================================================
 
-void arcadeDrive()			//fully manual arcade drive
+
+enum arcadeTypes {MANUAL, AUTO};
+void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 {
-	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
+	if(arcadeType = MANUAL)
 	{
-		double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-		chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick);
-		chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick);
-	}
-	else
-	{
-	chas.stop();
-	}
-}
 
-
-
-double autoStraightVal = 0;
-void arcadeAuto()									//arcade drive with autostraight drive assist
-{
-	static double inertialStart;					//starting inertial heading when driving straight
-	static bool autoStraight = false; 				//boolean checking whether to implement autostraight assist
-	double kPauto = chas.getVelocity() > 0 ? 4 : -4;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
-	kPauto = chas.reverseStatus() ? -kPauto : kPauto;
-	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
-	{
-			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-			if(abs(turnStick) < 5) 		//if not turning(initiate autostraight)
-			{
-				if(autoStraight) 			//if autostraight enabled, calculate error
-				{
-					autoStraightVal = (inert.get_heading() - inertialStart) * kPauto;
-
-					if(autoStraightVal > 10) {autoStraight = false;} 		//if there is a big unexpected jerk, ie if the robot is hit by an external object, reset autostraight
-				}
-				
-				else
-				{
-					autoStraight = true;					//since driving straight, set autostraight to true
-					inert.set_heading(180);					//reset inertial valu
-					inertialStart = inert.get_heading();	//set initial inertial value, this part of the loop will not be executed again until autostraight is reset
-				}
-			}
-
-			else 
-			{
-				autoStraight = false;			//disable autostraight calculations because turning is true
-				autoStraightVal = 0;			//disable effect of autostraight
-			}
-
-			//chas controls(take the vertical stick +- the turn stick and apply autostraight effect, if autoStraightVal = 0, then autostraight is disabled)
-			chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal) * (chas.getVelocity()/127));
-			chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal) * (chas.getVelocity()/127));
-	}
-	else
-	{
+		if(abs(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
+		{
+			double turnStick = (chas.reverseStatus()) ? (-con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X));
+			chas.spinLeft(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) + turnStick);
+			chas.spinRight(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) - turnStick);
+		}
+		else
+		{
 		chas.stop();
-		autoStraight = false;
+		}
+
+	}
+
+	else
+	{
+		static double inertialStart;					//starting inertial heading when driving straight
+		static bool autoStraight = false; 				//boolean checking whether to implement autostraight assist
+		double kPauto = chas.getVelocity() > 0 ? 4 : -4;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
+		kPauto = chas.reverseStatus() ? -kPauto : kPauto;
+		if(abs(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
+		{
+				double turnStick = (chas.reverseStatus()) ? (-con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X));
+				if(abs(turnStick) < 5) 		//if not turning(initiate autostraight)
+				{
+					if(autoStraight) 			//if autostraight enabled, calculate error
+					{
+						autoStraightVal = (inert.get_heading() - inertialStart) * kPauto;
+
+						if(autoStraightVal > 10) {autoStraight = false;} 		//if there is a big unexpected jerk, ie if the robot is hit by an external object, reset autostraight
+					}
+					
+					else
+					{
+						autoStraight = true;					//since driving straight, set autostraight to true
+						inert.set_heading(180);					//reset inertial valu
+						inertialStart = inert.get_heading();	//set initial inertial value, this part of the loop will not be executed again until autostraight is reset
+					}
+				}
+
+				else 
+				{
+					autoStraight = false;			//disable autostraight calculations because turning is true
+					autoStraightVal = 0;			//disable effect of autostraight
+				}
+
+				//chas controls(take the vertical stick +- the turn stick and apply autostraight effect, if autoStraightVal = 0, then autostraight is disabled)
+				chas.spinLeft(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) + turnStick - (autoStraightVal) * (chas.getVelocity()/127));
+				chas.spinRight(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) - turnStick + (autoStraightVal) * (chas.getVelocity()/127));
+		}
+		else
+		{
+			chas.stop();
+			autoStraight = false;
+		}
 	}
 }
+
 
 
 void tankDrive()
 {
-	if(abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)) > 10)
+	if(abs(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y)) > 10)
 	{
-		chas.spinLeft(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-		chas.spinRight(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+		chas.spinLeft(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
+		chas.spinRight(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
 	}
 	else
 	{
@@ -362,7 +370,7 @@ void tankDrive()
 
 void reverseToggle()
 {
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+	if(con.get_digital(E_CONTROLLER_DIGITAL_Y))
 		chas.reverseControls();
 	else
 		chas.reverseReleased();
@@ -374,13 +382,13 @@ void brakeType()
 {
 	bool brakeinitiate = true;
 	static int startTime = 0;
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+	if(con.get_digital(E_CONTROLLER_DIGITAL_UP))
 	{
 		if(chas.getBrakeMode() == 0) {chas.changeBrake(chas.HOLD);}
 		else {chas.changeBrake(chas.COAST);}
 		disableAuto = true;
 		startTime = globalTime;
-		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {}
+		while(con.get_digital(E_CONTROLLER_DIGITAL_UP)) {}
 	}
 	//disable automatic brake mode selection if manual selection has been made within 10 sec
 	if(!(startTime == 0) && !disableAll) {globalTime - startTime < 8000 ? disableAuto = true : disableAuto = false;}
@@ -396,7 +404,7 @@ void autoBrakeMode()	//automatically sets brake mode
 		//set brake type to hold if robot is on platform and is at risk of sliding off
 		if(abs(int(inert.get_pitch())) > 10 && globalTime > 3000)
 		{
-			if (abs(con.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 10|| abs(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) > 10)
+			if (abs(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) > 10|| abs(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y)) > 10)
 			{
 				chas.changeBrake(chas.HOLD);
 			}
@@ -431,7 +439,6 @@ void autoBrakeMode()	//automatically sets brake mode
 void Park()
 {
 	static bool parking = false;
-	static int goalsPossessed = 0;
 	while(true)
 	{
 		if(abs(inert.get_pitch()) < 6) 
@@ -439,6 +446,7 @@ void Park()
 			if(parking)
 			{
 				chas.stop();
+				chas.changeBrake(chas.HOLD);
 			}
 
 			else
@@ -462,22 +470,22 @@ bool front = true;
 void liftControl()
 {
 	// Check if 'X' is being pressed and set back lift to coast if it is
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X))
-		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	if(con.get_digital(E_CONTROLLER_DIGITAL_X))
+		backLift.set_brake_mode(E_MOTOR_BRAKE_COAST);
 	else
-		backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+		backLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
 
 	// Check if driver is currently controlling pneumatics or lifts
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) == false)
+	if(con.get_digital(E_CONTROLLER_DIGITAL_L2) == false)
 	{
 
 		// Check L1 to see if driver wants to control front lift or back lift
 		
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {front = false;}
+		if(con.get_digital(E_CONTROLLER_DIGITAL_L1)) {front = false;}
 		else {front = true;}
 
 		// Move lift up
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		if(con.get_digital(E_CONTROLLER_DIGITAL_R1))
 		{
 			if(front)
 			{
@@ -491,7 +499,7 @@ void liftControl()
 			}
 		}
 		// Move lift down
-		else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		else if(con.get_digital(E_CONTROLLER_DIGITAL_R2))
 		{
 			if(front)
 			{
@@ -517,12 +525,12 @@ void liftControl()
 void pneumaticControl()
 {
 	// Check if l2 is pressed down, meaning driver wants to control the pneumatics
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
+	if(con.get_digital(E_CONTROLLER_DIGITAL_L2))
 	{
 		// firstPress1 boolean is used to make sure the front pneumatic
 		// doesn't repeatedly toggle on and off when R1 is held
 		static bool firstPress1 = true;
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		if(con.get_digital(E_CONTROLLER_DIGITAL_R1))
 		{
 			// Check if this is R1's initial press, and toggle the pneumatic if it is.
 			if(firstPress1)
@@ -538,7 +546,7 @@ void pneumaticControl()
 		// firstPress2 boolean is used to make sure the back pneumatic
 		// doesn't repeatedly toggle on and off when the R2 is held
 		static bool firstPress2 = true;
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		if(con.get_digital(E_CONTROLLER_DIGITAL_R2))
 		{
 			// Check if this is R2's initial press, and toggle the pneumatic if it is.
 			if(firstPress2)
@@ -556,11 +564,11 @@ void pneumaticControl()
 void killAllAuto()
 {
 	if(disableAll) {disableAuto = true;}
-	if(con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+	if(con.get_digital(E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(E_CONTROLLER_DIGITAL_RIGHT))
 	{
 		con.clear();
 		disableAll = !disableAll;
-		while(con.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {}
+		while(con.get_digital(E_CONTROLLER_DIGITAL_LEFT) && con.get_digital(E_CONTROLLER_DIGITAL_RIGHT)) {}
 	}
 }
 
@@ -582,15 +590,14 @@ void printInfo()
 		if(counter == 10)
 		{
 			//print whether the chassis controls are reversed or not
-			/*
+			
 			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 			else {con.set_text(0,0, "Chas: REVERSE");}
-			*/
-			con.print(0,0,"Autoval: %.1f", chas.getVelocity());
+			
 		}
 		if(counter == 20)
 		{
-			/*
+			
 			//print the brake type for the chassis
 			if(disableAuto)
 			{
@@ -602,8 +609,6 @@ void printInfo()
 				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
 				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
 			}
-			*/
-			con.print(1,0, "Inert: %.1f", inert.get_heading());
 			
 		}
 		if(counter == 30)
@@ -626,6 +631,7 @@ void printInfo()
 			//con.print(2, 0, "Inert: %.2f", inert.get_pitch());
 			counter = 0;
 		}
+
 		counter++;
 	}
 }
@@ -635,15 +641,17 @@ void printInfo()
 //rotate(degrees, direction)
 
 
+//TODO 9/21: test park function, strengthen parking hold kp
+
 
 void red1()
 {
 	backLift.move_relative(-3000, -127);
-	pros::delay(300);
+	delay(300);
 	drive(-470, 2500);
 	backLift.move_absolute(0, 127);	
 	goalsPossessed++;
-	pros::delay(300);			
+	delay(300);			
 	drive(250);
 	rotateTo(-45);
 	drive(-340, 2000, 0.8);
@@ -660,8 +668,7 @@ void red1()
 }
 void red2()
 {
-	drive(200);
-	frontPneu.toggle();
+	Park();
 }
 void blue1()
 {
@@ -669,7 +676,8 @@ void blue1()
 }
 void blue2()
 {
-
+	drive(200);
+	frontPneu.toggle();
 }
 void skills()
 {
@@ -686,24 +694,14 @@ void autonomous()
 	if (autonNum == 4){blue2();}
 	if (autonNum == 5){skills();}
 	
-	
-	
-	/*
-	backLift.move_absolute(-1500, -100);
-	pros::delay(1000);
-	drive(-150);
-	backLift.move_absolute(-1200, 100);
-	pros::delay(1000);
-	drive(-350);
-	*/
 }
 
 // main control functions ======================================================
 void initialize()
 {
-	pros::lcd::initialize();
-	frontLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	lcd::initialize();
+	frontLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
+	backLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
 	chas.changeBrake(chas.COAST);
 	disableAuto = false;
 }
@@ -716,32 +714,31 @@ void competition_initialize() {}
 
 void opcontrol()
 {
-	pros::lcd::set_text(0, "the impostor from among us is in ur code");
+	lcd::set_text(0, "aayush the goat");
 	con.clear();
-	while(autonCurrentlySelecting){autonSelector();}
+
+	while(autonCurrentlySelecting) { autonSelector(); }
 
 	chas.changeBrake(chas.COAST);
-	backLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	backLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
 
 	while (true)
 	{
 		
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
-		arcadeDrive();
+
+		arcadeDrive(MANUAL);
 		liftControl();
 		pneumaticControl();
 		reverseToggle();
 		brakeType();
 		autoBrakeMode();
 		killAllAuto();
-		autoPark();
-		if(con.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
-			autonomous();
-	
-		// print information to controller
 		printInfo();
+
+		if(con.get_digital(E_CONTROLLER_DIGITAL_DOWN)) { autonomous(); }
 	
-		pros::delay(5);
+		delay(5);
 		globalTime += 5;
 	}
 }
