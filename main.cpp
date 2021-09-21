@@ -176,10 +176,8 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
 
-void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
+void rotate(double degrees, int timeout = 60000)
 {
-	if(dir == CCW)
-		degrees = -degrees;
 	// Timeout counter
 	int time = 0;
 
@@ -217,7 +215,7 @@ void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
 
 	while(true)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %d", time);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %d", error);}
 		currentRotation = inert.get_heading();
 
 		if(time % 200 == 0)
@@ -284,7 +282,7 @@ void rotate(double degrees, int timeout = 100000, rotateDirection dir=CW)
 }
 
 
-void rotateTo(double degrees, int timeout=100000, rotateDirection dir = CW) { rotate(degrees - globalRotation, timeout, dir); }
+void rotateTo(double degrees, int timeout=100000) { rotate(degrees - globalRotation, timeout); }
 
 
 // driver control functions ====================================================
@@ -311,6 +309,7 @@ void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 
 	else
 	{
+		static int autoStraightVal;
 		static double inertialStart;					//starting inertial heading when driving straight
 		static bool autoStraight = false; 				//boolean checking whether to implement autostraight assist
 		double kPauto = chas.getVelocity() > 0 ? 4 : -4;		//kP is the magnitude of the effect of autostraight, reverse for when chassis is negative
@@ -436,30 +435,36 @@ void autoBrakeMode()	//automatically sets brake mode
 }
 
 
-void Park()
+void park()
 {
 	static bool parking = false;
 	while(true)
 	{
-		if(abs(inert.get_pitch()) < 6) 
-		{
-			if(parking)
-			{
-				chas.stop();
-				chas.changeBrake(chas.HOLD);
-			}
+		backLift.move(25);
+		if(abs(inert.get_pitch()) > 1) {frontLift.move(-30);}
 
-			else
-			{
-				chas.spinLeft(127);
-				chas.spinRight(127);
-			}
+		if(abs(inert.get_pitch() > 21)) 
+		{
+			parking = true;
+		}
+
+		if(abs(inert.get_pitch()) < 15 && !parking) 
+		{
+			chas.spinLeft(127);
+			chas.spinRight(127);
+		}
+
+		else if(abs(inert.get_pitch()) < 20.5 && parking)
+		{
+			chas.stop();
+			chas.changeBrake(chas.HOLD);
+			backLift.move(0);
+			frontLift.move(0);
 		}
 
 		else 
 		{
-			parking = true;
-			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 4);
+			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 2.5 + 0.3 * goalsPossessed);
 		}
 	}
 }
@@ -590,10 +595,12 @@ void printInfo()
 		if(counter == 10)
 		{
 			//print whether the chassis controls are reversed or not
-			
+			/*
 			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 			else {con.set_text(0,0, "Chas: REVERSE");}
-			
+			*/
+
+			con.print(0,0,"inert: %.2f", inert.get_pitch());
 		}
 		if(counter == 20)
 		{
@@ -638,21 +645,48 @@ void printInfo()
 
 //autonomous functions
 //drive(enc, timeout, pct power)
-//rotate(degrees, direction)
+//rotate(degrees, timeout)
 
-
-//TODO 9/21: test park function, strengthen parking hold kp
 
 
 void red1()
+{
+
+	goalsPossessed = 0;
+	drive(410, 2500, 100);
+	drive(20,400);
+	frontPneu.toggle();	
+	frontLift.move_absolute(-180,-127);
+	goalsPossessed = -0.3;
+	delay(300);
+	drive(-195,1000);
+	backLift.move_absolute(-2000,-127);
+	rotateTo(-90,2000);
+	drive(-30,400);
+	backLift.move_absolute(-2350,-127);
+	delay(400);
+	drive(70,500);
+	delay(500);
+	rotateTo(-74,1200);
+	backLift.move_absolute(-3000,-127);
+	delay(500);
+	drive(-130,1000);
+	backLift.move_absolute(-2000,127);
+	delay(400);
+	rotateTo(-115,1000);
+	drive(230);
+
+}
+
+void red2()
 {
 	backLift.move_relative(-3000, -127);
 	delay(300);
 	drive(-470, 2500);
 	backLift.move_absolute(0, 127);	
-	goalsPossessed++;
+	goalsPossessed--;
 	delay(300);			
-	drive(250);
+	drive(250,1000);
 	rotateTo(-45);
 	drive(-340, 2000, 0.8);
 	drive(-25, 1000, 1);
@@ -665,10 +699,6 @@ void red1()
 	drive(-100, 2000, 1);
 	rotate(-90);
 	drive(-200, 1000, 1);
-}
-void red2()
-{
-	Park();
 }
 void blue1()
 {
