@@ -96,8 +96,9 @@ void autonSelector()
 		else if (autonType == 2){con.set_text(1,0, "Elevated Short       ");}
 		else if (autonType == 3){con.set_text(1,0, "De-elevated Long      ");}
 		else if (autonType == 4){con.set_text(1,0, "De-elevated short     ");}
-		else if (autonType == 5){con.set_text(1,0, "Skills               ");}
-		else if(autonType == 6) {con.set_text(1,0, "None                  ");}
+		else if (autonType == 5) {con.set_text(1,0, "Both               ");}
+		else if (autonType == 6){con.set_text(1,0, "Skills               ");}
+		else if(autonType == 7) {con.set_text(1,0, "None                  ");}
 	}
 
 	if(autonTypeSelected)
@@ -120,7 +121,7 @@ void autonSelector()
 		}
 		else
 		{
-			if(autonType == 7) {autonType = 1;}
+			if(autonType == 8) {autonType = 1;}
 			else {autonType++;}
 		}
 
@@ -137,7 +138,7 @@ void autonSelector()
 		}
 		else
 		{
-			if(autonType == 0) {autonType = 5;}
+			if(autonType == 0) {autonType = 7;}
 			else {autonType--;}
 		}
 		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
@@ -146,7 +147,7 @@ void autonSelector()
 
 	if (con.get_digital(E_CONTROLLER_DIGITAL_A))
 	{
-		if(autonType >= 5) {autonCurrentlySelecting = false;}
+		if(autonType >= 6) {autonCurrentlySelecting = false;}
 		else 
 		{
 			if(autonTypeSelected) 
@@ -825,7 +826,7 @@ void redBoth()
 
 void blueElevatedLong()
 {
-	redBoth();
+
 }
 
 void blueElevatedShort()
@@ -847,6 +848,11 @@ void blueDeElevatedShort()
 	con.clear();
 	delay(50);
 	con.print(0,0,"BDES");
+}
+
+void blueBoth()
+{
+
 }
 
 
@@ -882,9 +888,13 @@ void autonomous()
 		else {blueDeElevatedShort();}
 	}
 
-	if(autonType == 5) {skills();}
+	if(autonType == 5)
+	{
+		if(autonColor == 1) {redBoth();}
+		else {blueBoth();}
+	}
 
-	delay(1000);
+	if(autonType == 6) {skills();}
 	
 }
 
