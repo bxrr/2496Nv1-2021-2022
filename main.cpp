@@ -699,7 +699,7 @@ void printInfo()
 			*/
 
 			//con.print(0,0,"inert: %.2f", inert.get_heading());
-			con.print(0,0,"Speed: %.1f mph", abs(chas.getVelocity() * 4 * 3.14 * 60 / 63360));
+			con.print(0,0,"Speed: %.1f mph", abs((chas.getVelocity() * 4 * 3.14 * 60 * 3) / (63360 * 5)));
 		}
 		if(counter == 20)
 		{

@@ -127,7 +127,7 @@ public:
 
     double getVelocity()
     {
-      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midRight.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 5 ;
+      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midLeft.get_actual_velocity() + midRight.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
     }
 
     // Chassis reverse control ===================================================
