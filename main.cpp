@@ -174,6 +174,7 @@ void autonSelector()
 
 // auton functions =============================================================
 double goalsPossessed = 0;
+bool killAuton = false;
 
 void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3) // timeout in milliseconds
 {
@@ -203,13 +204,13 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 	double error = 0.0;
 	double integral = 0.0;
 
-	float kP = (targetEnc >= 0) ? (5) : (-5);
+	float kP = (targetEnc >= 0) ? (1) : (-1);
 	kP *= (1 + goalsPossessed/3);
 
 	con.clear();
 
 	// Drive loop, might add a timeout thing if it's needed
-	while(timeout > time)
+	while(timeout > time && !killAuton)
 	{
 		if(time % 50 == 0) {con.print(1,0,"error: %.1f", distError);}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
@@ -228,6 +229,11 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 
 		lastError = error;
 		error = initialRotation - inert.get_heading();
+		if(abs(error) > 21) 
+		{
+			killAuton = true;
+			break;
+		}
 		integral += error;
 		derivative = error - lastError;
 
@@ -305,7 +311,7 @@ void rotate(double degrees, int timeout = 60000)
 	int sameErrorCount = 0;
 	double errorCheck;
 
-	while(true)
+	while(!killAuton)
 	{
 		if(time % 50 == 0) {con.print(1,0,"GH: %d", error);}
 		currentRotation = inert.get_heading();
@@ -383,7 +389,7 @@ void rotateTo(double degrees, int timeout=100000) { rotate(degrees - globalRotat
 enum arcadeTypes {MANUAL, AUTO};
 void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 {
-	if(arcadeType = MANUAL)
+	if(arcadeType == MANUAL)
 	{
 
 		if(abs(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
@@ -692,7 +698,8 @@ void printInfo()
 			else {con.set_text(0,0, "Chas: REVERSE");}
 			*/
 
-			con.print(0,0,"inert: %.2f", inert.get_heading());
+			//con.print(0,0,"inert: %.2f", inert.get_heading());
+			con.print(0,0,"Speed: %.1f mph", abs(chas.getVelocity() * 4 * 3.14 * 60 / 63360));
 		}
 		if(counter == 20)
 		{
@@ -743,7 +750,7 @@ void printInfo()
 void redElevatedLong()
 {
 	goalsPossessed = 0;
-	drive(410, 2500, 1, 10);
+	drive(410, 2650, 1, 10);
 	drive(50,180);
 	frontPneu.toggle();	
 	frontLift.move_absolute(-200,-127);
@@ -752,8 +759,8 @@ void redElevatedLong()
 	drive(-195,1000);
 	backLift.move_absolute(-2000,-127);
 	rotateTo(-95,2000);
-	drive(-30,700);
-	backLift.move_absolute(-2350,-127);
+	drive(-33,1000);
+	backLift.move_absolute(-2400,-127);
 	delay(400);
 	drive(80,1000);
 	delay(500);
@@ -764,7 +771,7 @@ void redElevatedLong()
 	backLift.move_absolute(-2000,127);
 	delay(400);
 	rotateTo(-100,1000);
-	drive(230);
+	drive(200);
 
 }
 
@@ -779,7 +786,7 @@ void redElevatedShort()
 
 void redDeElevatedLong()
 {
-	drive(401,2500,1, 10);
+	drive(405,2500,1, 10);
 	drive(50,180);
 	frontPneu.toggle();
 	frontLift.move_absolute(-200,-127);
@@ -811,7 +818,7 @@ void redBoth()
 	drive(160);
 	rotateTo(-179);
 	backLift.move_absolute(-1600, -127);
-	drive(-775, 3500, 0.73);
+	drive(-790, 4000, 0.73);
 	backLift.move_absolute(-1800, -127);
 	drive(-25, 200);
 	backLift.move_absolute(-2450, -127);
@@ -826,7 +833,7 @@ void redBoth()
 
 void blueElevatedLong()
 {
-
+	drive(1000);
 }
 
 void blueElevatedShort()
@@ -838,9 +845,17 @@ void blueElevatedShort()
 
 void blueDeElevatedLong()
 {
-	con.clear();
-	delay(50);
-	con.print(0,0,"BDEL");
+	drive(401,2500,1, 10);
+	drive(50,180);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200,-127);
+	drive(-370,2000);
+	backLift.move_absolute(-1800, -127);
+	rotateTo(-90,2000);
+	drive(-16,500);
+	backLift.move_absolute(-2485, -127);
+	delay(1000);
+	drive(120, 1200);
 }
 
 void blueDeElevatedShort()
@@ -874,37 +889,44 @@ void autonomous()
 	short = only gets one win point from alliance mobile goal
 	*/
 
-	if(autonType == 1)
+	while(!killAuton)
 	{
-		if(autonColor == 1) {redElevatedLong();}
-		else {blueElevatedLong();}
-	}
 
-	if(autonType == 2)	//only gets one win point on elevated side
-	{
-		if(autonColor == 1) {redElevatedShort();}
-		else {blueElevatedShort();}
-	}
+		if(autonType == 1)
+		{
+			if(autonColor == 1) {redElevatedLong();}
+			else {blueElevatedLong();}
+		}
 
-	if(autonType == 3)
-	{
-		if(autonColor == 1) {redDeElevatedLong();}
-		else {blueDeElevatedLong();}
-	}
-	
-	if(autonType == 4)
-	{
-		if(autonColor == 1) {redDeElevatedShort();}
-		else {blueDeElevatedShort();}
-	}
+		if(autonType == 2)	//only gets one win point on elevated side
+		{
+			if(autonColor == 1) {redElevatedShort();}
+			else {blueElevatedShort();}
+		}
 
-	if(autonType == 5)
-	{
-		if(autonColor == 1) {redBoth();}
-		else {blueBoth();}
-	}
+		if(autonType == 3)
+		{
+			if(autonColor == 1) {redDeElevatedLong();}
+			else {blueDeElevatedLong();}
+		}
+		
+		if(autonType == 4)
+		{
+			if(autonColor == 1) {redDeElevatedShort();}
+			else {blueDeElevatedShort();}
+		}
 
-	if(autonType == 6) {skills();}
+		if(autonType == 5)
+		{
+			if(autonColor == 1) {redBoth();}
+			else {blueBoth();}
+		}
+
+		if(autonType == 6) {skills();}
+
+		break;
+		
+	}
 	
 }
 
