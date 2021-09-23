@@ -862,15 +862,25 @@ void skills()
 }
 
 //autonomous(will be called by competition)
-void autonomous()
+void autonomous()	
 {
-	if(autonType == 1) //elevated long
+	/*
+	KEY:
+	elevated = side with platform elevated
+	de-elevated = side with platform not elevated
+	both = starts from de-elevated side but utilizes both side
+
+	long = gets at least 2 goals
+	short = only gets one win point from alliance mobile goal
+	*/
+
+	if(autonType == 1)
 	{
 		if(autonColor == 1) {redElevatedLong();}
 		else {blueElevatedLong();}
 	}
 
-	if(autonType == 2)
+	if(autonType == 2)	//only gets one win point on elevated side
 	{
 		if(autonColor == 1) {redElevatedShort();}
 		else {blueElevatedShort();}
