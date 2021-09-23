@@ -34,8 +34,8 @@ void checkInertial(int lineNum=1)
 	}
 }
 
-bool autonCurrentlySelecting = true;
-int autonNum = 1;
+
+/*
 void autonSelector()
 {
 	static bool firstTime = true;
@@ -77,13 +77,104 @@ void autonSelector()
 	delay(5);
 	
 }
+*/
+
+bool autonCurrentlySelecting = true;
+int autonType = 1;
+int autonColor = 1;
+bool autonTypeSelected = false;
+void autonSelector()
+{
+	static bool firstTime = true;
+	static int localTime = 0;
+	if(localTime > 150) {localTime = 0;}
+	if(localTime == 50) {con.set_text(0,0, "Select Auton:");}
+
+	if(localTime ==100) 
+	{
+		if (autonType == 1){con.set_text(1,0, "Elevated Long        ");}
+		else if (autonType == 2){con.set_text(1,0, "Elevated Short       ");}
+		else if (autonType == 3){con.set_text(1,0, "De-elevated Long      ");}
+		else if (autonType == 4){con.set_text(1,0, "De-elevated short     ");}
+		else if (autonType == 5){con.set_text(1,0, "Skills               ");}
+		else if(autonType == 6) {con.set_text(1,0, "None                  ");}
+	}
+
+	if(autonTypeSelected)
+	{
+		if(localTime == 150) 
+		{
+			if (autonColor == 1){con.set_text(2,0, "Red ");}
+			else if (autonColor == 2){con.set_text(2,0, "Blue");}
+		}
+	}
+
+
+	if (con.get_digital(E_CONTROLLER_DIGITAL_RIGHT))
+	{
+		con.clear();
+		if(autonTypeSelected)
+		{
+			if(autonColor == 3){autonColor = 1;}
+			else{autonColor++;}
+		}
+		else
+		{
+			if(autonType == 7) {autonType = 1;}
+			else {autonType++;}
+		}
+
+		while (con.get_digital(E_CONTROLLER_DIGITAL_RIGHT)){}
+	}
+
+	else if (con.get_digital(E_CONTROLLER_DIGITAL_LEFT))
+	{
+		con.clear();
+		if(autonTypeSelected)
+		{
+			if(autonColor == 0){autonColor = 2;}
+			else{autonColor--;}
+		}
+		else
+		{
+			if(autonType == 0) {autonType = 5;}
+			else {autonType--;}
+		}
+		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
+	}
+	
+
+	if (con.get_digital(E_CONTROLLER_DIGITAL_A))
+	{
+		if(autonType >= 5) {autonCurrentlySelecting = false;}
+		else 
+		{
+			if(autonTypeSelected) 
+			{
+				autonCurrentlySelecting = false;
+				while(con.get_digital(E_CONTROLLER_DIGITAL_A)) {}
+			}
+
+			else 
+			{
+				autonTypeSelected = true;
+				while(con.get_digital(E_CONTROLLER_DIGITAL_A)) {}
+			}
+		}
+	}
+
+	localTime += 5;
+	delay(5);
+}
+
+
 
 
 
 // auton functions =============================================================
 double goalsPossessed = 0;
 
-void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeout in milliseconds
+void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3) // timeout in milliseconds
 {
 	// Timeout counter
 	int time = 0;
@@ -143,7 +234,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6) // timeou
 		chas.spinLeft(baseSpeed + (error * kP)*(baseSpeed/80));
 		chas.spinRight(baseSpeed - (error * kP)*(baseSpeed/80));
 		
-		if(abs(distError) < 3)
+		if(abs(distError) < errorRange)
 		{
 			if(!withinRange)
 		{
@@ -600,7 +691,7 @@ void printInfo()
 			else {con.set_text(0,0, "Chas: REVERSE");}
 			*/
 
-			con.print(0,0,"inert: %.2f", inert.get_pitch());
+			con.print(0,0,"inert: %.2f", inert.get_heading());
 		}
 		if(counter == 20)
 		{
@@ -648,67 +739,117 @@ void printInfo()
 //rotate(degrees, timeout)
 
 
-
-void red1()
+void redElevatedLong()
 {
-
 	goalsPossessed = 0;
-	drive(410, 2500, 100);
-	drive(20,400);
+	drive(410, 2500, 1, 10);
+	drive(50,180);
 	frontPneu.toggle();	
-	frontLift.move_absolute(-180,-127);
+	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
 	drive(-195,1000);
 	backLift.move_absolute(-2000,-127);
-	rotateTo(-90,2000);
-	drive(-30,400);
+	rotateTo(-95,2000);
+	drive(-30,700);
 	backLift.move_absolute(-2350,-127);
 	delay(400);
-	drive(70,500);
+	drive(80,1000);
 	delay(500);
-	rotateTo(-74,1200);
+	rotateTo(-74, 1000);
 	backLift.move_absolute(-3000,-127);
 	delay(500);
-	drive(-130,1000);
+	drive(-170,1000);
 	backLift.move_absolute(-2000,127);
 	delay(400);
-	rotateTo(-115,1000);
+	rotateTo(-100,1000);
 	drive(230);
 
 }
 
-void red2()
+void redElevatedShort()
 {
-	backLift.move_relative(-3000, -127);
+	drive(150);
+	drive(20,500);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200, -127);
+	drive(-150);
+}
+
+void redDeElevatedLong()
+{
+	drive(401,2500,1, 10);
+	drive(50,180);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200,-127);
+	drive(-370,2000);
+	backLift.move_absolute(-1800, -127);
+	rotateTo(-90,2000);
+	drive(-16,500);
+	backLift.move_absolute(-2485, -127);
+	delay(1000);
+	drive(120, 1200);
+}
+
+void redDeElevatedShort()
+{
+	drive(130);
+	drive(25, 350);
+	frontPneu.toggle();
+	delay(200);
+	frontPneu.toggle();
+	drive(-150);
+}
+
+void redBoth()
+{
+	drive(130);
+	drive(25, 350);
+	drive(-150, 1000);
+	rotateTo(-90);
+	drive(160);
+	rotateTo(-179);
+	backLift.move_absolute(-1600, -127);
+	drive(-775, 3500, 0.73);
+	backLift.move_absolute(-1800, -127);
+	drive(-25, 200);
+	backLift.move_absolute(-2450, -127);
+	delay(500);
+	drive(100, 400);
+	backLift.move_absolute(-2750, -127);
+	drive(-230, 2000);
+	backLift.move_absolute(-2000, 127);
 	delay(300);
-	drive(-470, 2500);
-	backLift.move_absolute(0, 127);	
-	goalsPossessed--;
-	delay(300);			
-	drive(250,1000);
-	rotateTo(-45);
-	drive(-340, 2000, 0.8);
-	drive(-25, 1000, 1);
-	backPneu.toggle();
-	goalsPossessed++;
-	rotateTo(-60, 1500);
-	drive(445, 2500, 1);
-	frontPneu.toggle();
-	goalsPossessed++;
-	drive(-100, 2000, 1);
-	rotate(-90);
-	drive(-200, 1000, 1);
+	drive(300);
 }
-void blue1()
+
+void blueElevatedLong()
 {
-	rotate(90);
+	redBoth();
 }
-void blue2()
+
+void blueElevatedShort()
 {
-	drive(200);
-	frontPneu.toggle();
+	con.clear();
+	delay(50);
+	con.print(0,0,"BES");
 }
+
+void blueDeElevatedLong()
+{
+	con.clear();
+	delay(50);
+	con.print(0,0,"BDEL");
+}
+
+void blueDeElevatedShort()
+{
+	con.clear();
+	delay(50);
+	con.print(0,0,"BDES");
+}
+
+
 void skills()
 {
 
@@ -717,12 +858,33 @@ void skills()
 //autonomous(will be called by competition)
 void autonomous()
 {
+	if(autonType == 1) //elevated long
+	{
+		if(autonColor == 1) {redElevatedLong();}
+		else {blueElevatedLong();}
+	}
+
+	if(autonType == 2)
+	{
+		if(autonColor == 1) {redElevatedShort();}
+		else {blueElevatedShort();}
+	}
+
+	if(autonType == 3)
+	{
+		if(autonColor == 1) {redDeElevatedLong();}
+		else {blueDeElevatedLong();}
+	}
 	
-	if (autonNum == 1){red1();}
-	if (autonNum == 2){red2();}
-	if (autonNum == 3){blue1();}
-	if (autonNum == 4){blue2();}
-	if (autonNum == 5){skills();}
+	if(autonType == 4)
+	{
+		if(autonColor == 1) {redDeElevatedShort();}
+		else {blueDeElevatedShort();}
+	}
+
+	if(autonType == 5) {skills();}
+
+	delay(1000);
 	
 }
 

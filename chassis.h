@@ -151,7 +151,8 @@ public:
     double leftTemp()
     {
       return (backLeft.get_temperature() +
-              frontLeft.get_temperature()) / 2;
+              midLeft.get_temperature() +
+              frontLeft.get_temperature()) / 3;
               
     }
 

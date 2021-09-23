@@ -7,7 +7,7 @@ private:
     pros::ADIDigitalOut pneu;
     bool extended;
 public:
-    Piston(int port) : pneu(port), extended(false) {pneu.set_value(false);}
+    Piston(int port) : pneu(port), extended(true) {pneu.set_value(true);}
 
     // general methods
     void toggle()
