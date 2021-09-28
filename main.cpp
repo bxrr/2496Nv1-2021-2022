@@ -2,6 +2,7 @@
 #include "chassis.h"
 #include "ports.h"
 #include "piston.h"
+#include "pid.h"
 
 #include <string.h>
 
@@ -9,6 +10,7 @@ using namespace pros;
 
 // Globals
 Chassis chas;
+
 Piston frontPneu(FRONT_PNEUMATIC_PORT);
 Piston backPneu(BACK_PNEUMATIC_PORT);
 Motor backLift(BACK_LIFT_PORT, E_MOTOR_GEARSET_18, false);
@@ -272,7 +274,11 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 	globalRotation += inert.get_heading() - initialRotation;
 }
 
-enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
+
+
+
+
+
 
 void rotate(double degrees, int timeout = 60000, double speedM = 1)
 {
@@ -382,6 +388,130 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 
 
 void rotateTo(double degrees, int timeout=100000) { rotate(degrees - globalRotation, timeout); }
+
+
+
+PID drivePID(1.5,0,0);
+PID turnPID(1,1,1);
+PID autoStraight(1,0,0);
+
+void driveNew(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3) // timeout in milliseconds
+{
+	if(maxspeed > 1) {maxspeed /= 100;}
+	int localTime = 0;
+	double currentPosition = 0;
+
+	double leftStartPos = chas.getLeftPos();
+	double rightStartPos = chas.getRightPos();
+	double initialPosition = (leftStartPos + rightStartPos) / 2;
+
+	int withinRangeTime;
+	bool withinRange = false;
+	//modify(new kp, new ki, new kd)
+	drivePID.modify(drivePID.getkP() * (1 + goalsPossessed/3), 0, 0);
+
+	float kP = (targetEnc >= 0) ? (1) : (-1);
+	kP *= (1 + goalsPossessed/3);
+	autoStraight.modify(kP);
+
+	while(timeout > localTime)
+	{
+		double lastPosition = currentPosition;
+		currentPosition = (chas.getLeftPos() + chas.getRightPos()) / 2;
+		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
+		double speed = drivePID.calculate(initialPosition, currentPosition, targetEnc, false, lastPosition - currentPosition);
+		//autostraight yet to be implemented
+
+
+		if(abs(targetEnc - (currentPosition - initialPosition)) < errorRange)
+		{
+			if(!withinRange)
+			{
+				withinRangeTime = localTime;
+				withinRange = true;
+			}
+			else if(localTime >= withinRangeTime + 500) { break; }
+		}
+
+		else { withinRange = false; }
+
+		chas.spinLeft(speed * maxspeed);
+		chas.spinRight(speed * maxspeed);
+
+		delay(5);
+		localTime += 5;
+	}
+
+	chas.changeBrake(chas.HOLD);
+	chas.stop();
+	//globalRotation += inert.get_heading() - initialRotation;
+}
+
+double rotateStartI;
+void rotateNew(double degrees, int timeout = 60000, double maxspeed = 1, bool autoSet = true)
+{
+	if(maxspeed > 1) {maxspeed /= 100;}
+	int localTime = 0;
+	
+	if(degrees < 0) {inert.set_heading(350);}
+	else if(degrees > 0) {inert.set_heading(10);}
+    else {return;}
+
+	double targetRotation = inert.get_heading() + degrees;
+	double initialRotation = inert.get_heading();
+
+	if(autoSet) { turnPID.modify((1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees))) * (1 + goalsPossessed/2)); }
+
+	double currentRotation;
+	int withinRangeTime;
+	bool withinRange = false;
+
+	if(autoSet) { rotateStartI = goalsPossessed + (1 + goalsPossessed/4); }
+	
+
+	while(timeout > localTime)
+	{
+		double lastRotation = currentRotation;
+		currentRotation = inert.get_heading();
+		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
+		bool integral = abs(initialRotation - currentRotation) <= rotateStartI;
+		double speed = turnPID.calculate(initialRotation, currentRotation, targetRotation, integral, lastRotation - currentRotation);
+
+
+		if(abs(currentRotation - targetRotation) <= 0.5)
+		{
+			if(!withinRange)
+		 	{
+				withinRangeTime = localTime;
+				withinRange = true;
+			}
+			else if(localTime >= withinRangeTime + 300) { break; }
+		}
+		else { withinRange = false; }
+
+		chas.spinLeft(speed * maxspeed);
+		chas.spinRight(-speed * maxspeed);
+
+		localTime += 5;
+		delay(5);
+
+
+	}
+}
+
+
+void rotateSpecial(double degrees, int timeout = 60000, double maxspeed = 1)
+{
+	double tempP = turnPID.getkP();
+	double tempI = turnPID.getkI();
+	double tempD = turnPID.getkD();
+
+	//need to tune
+	turnPID.modify(1,1,1);
+	rotateNew(degrees, timeout, maxspeed, false);
+	turnPID.modify(tempP, tempI, tempD);
+}
+
 
 
 // driver control functions ====================================================
