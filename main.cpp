@@ -274,9 +274,10 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 
 enum rotateDirection {CW, CCW}; // clockwise / counter clockwise
 
-void rotate(double degrees, int timeout = 60000)
+void rotate(double degrees, int timeout = 60000, double speedM = 1)
 {
 	// Timeout counter
+	if(speedM > 1) {speedM = speedM/100;}
 	int time = 0;
 
 	// Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
@@ -347,8 +348,8 @@ void rotate(double degrees, int timeout = 60000)
 		derivative = lastError - error;
 		speed = (error * kP) + (integral * kI) + (derivative * kD);
 
-		chas.spinLeft(speed);
-		chas.spinRight(-speed);
+		chas.spinLeft(speed * speedM);
+		chas.spinRight(-speed * speedM);
 		
 		if(abs(error) <= 0.5)
 		{
@@ -699,7 +700,9 @@ void printInfo()
 			*/
 
 			//con.print(0,0,"inert: %.2f", inert.get_heading());
-			con.print(0,0,"Speed: %.1f mph", abs((chas.getVelocity() * 4 * 3.14 * 60 * 3) / (63360 * 5)));
+			double speed = (chas.getVelocity() * 400 * 3.14 * 60 * 3) / (63360 * 5);
+			speed = speed < 0 ? -speed : speed;
+			con.print(0,0,"Speed: %.1f mph   ", speed);
 		}
 		if(counter == 20)
 		{
@@ -750,13 +753,13 @@ void printInfo()
 void redElevatedLong()
 {
 	goalsPossessed = 0;
-	drive(410, 2650, 1, 10);
-	drive(50,180);
+	drive(405, 2300, 1, 10);
+	drive(111,100, 1);
 	frontPneu.toggle();	
 	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
-	drive(-195,1000);
+	drive(-200,1000);
 	backLift.move_absolute(-2000,-127);
 	rotateTo(-95,2000);
 	drive(-33,1000);
@@ -786,11 +789,12 @@ void redElevatedShort()
 
 void redDeElevatedLong()
 {
-	drive(405,2500,1, 10);
-	drive(50,180);
+	drive(400, 1800, 1, 10);
+	drive(200,200);
 	frontPneu.toggle();
+	drive(-100, 500, 1, 10);
 	frontLift.move_absolute(-200,-127);
-	drive(-370,2000);
+	drive(-305,1500);
 	backLift.move_absolute(-1800, -127);
 	rotateTo(-90,2000);
 	drive(-16,500);
@@ -811,63 +815,113 @@ void redDeElevatedShort()
 
 void redBoth()
 {
-	drive(130);
+	drive(130, 2000);
 	drive(25, 350);
 	drive(-150, 1000);
 	rotateTo(-90);
-	drive(160);
+	drive(160, 2000);
 	rotateTo(-179);
 	backLift.move_absolute(-1600, -127);
 	drive(-790, 4000, 0.73);
+	rotate(10, 500);
 	backLift.move_absolute(-1800, -127);
 	drive(-25, 200);
 	backLift.move_absolute(-2450, -127);
-	delay(500);
+	delay(400);
+	rotate(-10, 500);
 	drive(100, 400);
 	backLift.move_absolute(-2750, -127);
 	drive(-230, 2000);
 	backLift.move_absolute(-2000, 127);
 	delay(300);
-	drive(300);
+	drive(210);
 }
 
 void blueElevatedLong()
 {
-	drive(1000);
+	goalsPossessed = 0;
+	drive(405, 2300, 1, 10);
+	drive(111,100, 1);
+	frontPneu.toggle();	
+	frontLift.move_absolute(-200,-127);
+	goalsPossessed = -0.3;
+	delay(300);
+	drive(-200,1000);
+	backLift.move_absolute(-2000,-127);
+	rotateTo(-95,2000);
+	drive(-33,1000);
+	backLift.move_absolute(-2400,-127);
+	delay(400);
+	drive(80,1000);
+	delay(500);
+	rotateTo(-74, 1000);
+	backLift.move_absolute(-3000,-127);
+	delay(500);
+	drive(-170,1000);
+	backLift.move_absolute(-2000,127);
+	delay(400);
+	rotateTo(-100,1000);
+	drive(200);
 }
 
 void blueElevatedShort()
 {
-	con.clear();
-	delay(50);
-	con.print(0,0,"BES");
+	drive(150);
+	drive(20,500);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200, -127);
+	drive(-150);
 }
 
 void blueDeElevatedLong()
 {
-	drive(401,2500,1, 10);
-	drive(50,180);
+	drive(400, 1800, 1, 10);
+	drive(200,200);
 	frontPneu.toggle();
+	goalsPossessed = -0.3;
+	drive(-100, 500, 1, 10);
 	frontLift.move_absolute(-200,-127);
-	drive(-370,2000);
+	drive(-305,1500);
 	backLift.move_absolute(-1800, -127);
-	rotateTo(-90,2000);
-	drive(-16,500);
-	backLift.move_absolute(-2485, -127);
+	rotateTo(-86,2000);
+	drive(-30,800);
+	backLift.move_absolute(-2442, -127);
 	delay(1000);
 	drive(120, 1200);
 }
 
 void blueDeElevatedShort()
 {
-	con.clear();
-	delay(50);
-	con.print(0,0,"BDES");
+	drive(130);
+	drive(25, 350);
+	frontPneu.toggle();
+	delay(200);
+	frontPneu.toggle();
+	drive(-150);
 }
 
 void blueBoth()
 {
-
+	drive(130, 2000);
+	drive(25, 350);
+	drive(-150, 1000);
+	rotateTo(-90);
+	drive(160, 2000);
+	rotateTo(-179);
+	backLift.move_absolute(-1600, -127);
+	drive(-790, 4000, 0.73);
+	rotate(10, 500);
+	backLift.move_absolute(-1800, -127);
+	drive(-25, 200);
+	backLift.move_absolute(-2450, -127);
+	delay(400);
+	rotate(-10, 500);
+	drive(100, 400);
+	backLift.move_absolute(-2750, -127);
+	drive(-230, 2000);
+	backLift.move_absolute(-2000, 127);
+	delay(300);
+	drive(210);
 }
 
 
@@ -888,6 +942,8 @@ void autonomous()
 	long = gets at least 2 goals
 	short = only gets one win point from alliance mobile goal
 	*/
+
+	/*
 
 	while(!killAuton)
 	{
@@ -927,6 +983,9 @@ void autonomous()
 		break;
 		
 	}
+	*/
+	//goalsPossessed--;
+	rotate(90,10000,0.5);
 	
 }
 
