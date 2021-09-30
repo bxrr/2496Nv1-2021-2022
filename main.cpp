@@ -59,8 +59,8 @@ void autonSelector()
 		else{autonNum--;}
 		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
 	}
-	
-	if(localTime ==100) 
+
+	if(localTime ==100)
 	{
 		if (autonNum == 1){con.set_text(1,0, "Red  1");}
 		else if (autonNum == 2){con.set_text(1,0, "Red  2");}
@@ -77,7 +77,7 @@ void autonSelector()
 
 	localTime += 5;
 	delay(5);
-	
+
 }
 */
 
@@ -92,7 +92,7 @@ void autonSelector()
 	if(localTime > 150) {localTime = 0;}
 	if(localTime == 50) {con.set_text(0,0, "Select Auton:");}
 
-	if(localTime ==100) 
+	if(localTime ==100)
 	{
 		if (autonType == 1){con.set_text(1,0, "Elevated Long        ");}
 		else if (autonType == 2){con.set_text(1,0, "Elevated Short       ");}
@@ -105,7 +105,7 @@ void autonSelector()
 
 	if(autonTypeSelected)
 	{
-		if(localTime == 150) 
+		if(localTime == 150)
 		{
 			if (autonColor == 1){con.set_text(2,0, "Red ");}
 			else if (autonColor == 2){con.set_text(2,0, "Blue");}
@@ -145,20 +145,20 @@ void autonSelector()
 		}
 		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
 	}
-	
+
 
 	if (con.get_digital(E_CONTROLLER_DIGITAL_A))
 	{
 		if(autonType >= 6) {autonCurrentlySelecting = false;}
-		else 
+		else
 		{
-			if(autonTypeSelected) 
+			if(autonTypeSelected)
 			{
 				autonCurrentlySelecting = false;
 				while(con.get_digital(E_CONTROLLER_DIGITAL_A)) {}
 			}
 
-			else 
+			else
 			{
 				autonTypeSelected = true;
 				while(con.get_digital(E_CONTROLLER_DIGITAL_A)) {}
@@ -182,8 +182,8 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 {
 	// Timeout counter
 	int time = 0;
-	
-	float slewMult = 0.05; 
+
+	float slewMult = 0.05;
 
 	// Drive distance variables: uses motor encodings with distance error
 	double leftStartPos = chas.getLeftPos();
@@ -227,11 +227,11 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 			baseSpeed = (baseSpeed < 15) ? (15) : (baseSpeed);
 		}
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
-		
+
 
 		lastError = error;
 		error = initialRotation - inert.get_heading();
-		if(abs(error) > 21) 
+		if(abs(error) > 21)
 		{
 			killAuton = true;
 			break;
@@ -242,7 +242,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 		// Apply speeds
 		chas.spinLeft(baseSpeed + (error * kP)*(baseSpeed/80));
 		chas.spinRight(baseSpeed - (error * kP)*(baseSpeed/80));
-		
+
 		if(abs(distError) < errorRange)
 		{
 			if(!withinRange)
@@ -259,7 +259,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 		{
 			withinRange = false;
 		}
-		
+
 		// delay while loop
 		delay(10);
 		time += 10;
@@ -356,7 +356,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 
 		chas.spinLeft(speed * speedM);
 		chas.spinRight(-speed * speedM);
-		
+
 		if(abs(error) <= 0.5)
 		{
 			if(!withinRange)
@@ -380,7 +380,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 		delay(5);
 		time += 5;
 	}
-	// Stop robot after loop 
+	// Stop robot after loop
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
 	globalRotation += inert.get_heading() - initialRotation;
@@ -452,7 +452,7 @@ void rotateNew(double degrees, int timeout = 60000, double maxspeed = 1, bool au
 {
 	if(maxspeed > 1) {maxspeed /= 100;}
 	int localTime = 0;
-	
+
 	if(degrees < 0) {inert.set_heading(350);}
 	else if(degrees > 0) {inert.set_heading(10);}
     else {return;}
@@ -467,7 +467,7 @@ void rotateNew(double degrees, int timeout = 60000, double maxspeed = 1, bool au
 	bool withinRange = false;
 
 	if(autoSet) { rotateStartI = goalsPossessed + (1 + goalsPossessed/4); }
-	
+
 
 	while(timeout > localTime)
 	{
@@ -554,7 +554,7 @@ void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 
 						if(autoStraightVal > 10) {autoStraight = false;} 		//if there is a big unexpected jerk, ie if the robot is hit by an external object, reset autostraight
 					}
-					
+
 					else
 					{
 						autoStraight = true;					//since driving straight, set autostraight to true
@@ -563,7 +563,7 @@ void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 					}
 				}
 
-				else 
+				else
 				{
 					autoStraight = false;			//disable autostraight calculations because turning is true
 					autoStraightVal = 0;			//disable effect of autostraight
@@ -672,12 +672,12 @@ void park()
 		backLift.move(25);
 		if(abs(inert.get_pitch()) > 1) {frontLift.move(-30);}
 
-		if(abs(inert.get_pitch() > 21)) 
+		if(abs(inert.get_pitch() > 21))
 		{
 			parking = true;
 		}
 
-		if(abs(inert.get_pitch()) < 15 && !parking) 
+		if(abs(inert.get_pitch()) < 15 && !parking)
 		{
 			chas.spinLeft(127);
 			chas.spinRight(127);
@@ -691,7 +691,7 @@ void park()
 			frontLift.move(0);
 		}
 
-		else 
+		else
 		{
 			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 2.5 + 0.3 * goalsPossessed);
 		}
@@ -714,7 +714,7 @@ void liftControl()
 	{
 
 		// Check L1 to see if driver wants to control front lift or back lift
-		
+
 		if(con.get_digital(E_CONTROLLER_DIGITAL_L1)) {front = false;}
 		else {front = true;}
 
@@ -836,7 +836,7 @@ void printInfo()
 		}
 		if(counter == 20)
 		{
-			
+
 			//print the brake type for the chassis
 			if(disableAuto)
 			{
@@ -848,14 +848,14 @@ void printInfo()
 				if(chas.getBrakeMode() == 0) {con.set_text(1,0, "Brake M(A): COAST");}
 				else if(chas.getBrakeMode() == 1) {con.set_text(1,0, "Brake M(A) : HOLD");}
 			}
-			
+
 		}
 		if(counter == 30)
 		{
 			//prints the temperature of the chassis
 
 			if(disableAll) {con.print(2, 0, "ALL AUTO DISABLED");}
-			else 
+			else
 			{
 				if((chas.leftTemp() + chas.rightTemp()) /2 > 53)
 				{
@@ -885,7 +885,7 @@ void redElevatedLong()
 	goalsPossessed = 0;
 	drive(405, 2300, 1, 10);
 	drive(111,100, 1);
-	frontPneu.toggle();	
+	frontPneu.toggle();
 	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
@@ -919,18 +919,18 @@ void redElevatedShort()
 
 void redDeElevatedLong()
 {
-	drive(400, 1800, 1, 10);
-	drive(200,200);
+	drive(400, 1750, 1, 12);
+	drive(200, 180, 0.8);
 	frontPneu.toggle();
 	drive(-100, 500, 1, 10);
 	frontLift.move_absolute(-200,-127);
-	drive(-305,1500);
+	drive(-307,1500);
 	backLift.move_absolute(-1800, -127);
 	rotateTo(-90,2000);
-	drive(-16,500);
-	backLift.move_absolute(-2485, -127);
+	drive(-14,500);
+	backLift.move_absolute(-2450, -127);
 	delay(1000);
-	drive(120, 1200);
+	drive(180, 1200);
 }
 
 void redDeElevatedShort()
@@ -972,7 +972,7 @@ void blueElevatedLong()
 	goalsPossessed = 0;
 	drive(405, 2300, 1, 10);
 	drive(111,100, 1);
-	frontPneu.toggle();	
+	frontPneu.toggle();
 	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
@@ -1057,11 +1057,23 @@ void blueBoth()
 
 void skills()
 {
-
+	drive(130, 2000);
+	frontPneu.toggle();
+	frontLift.move_absolute(-600, -127);
+	drive(-150, 1000);
+	rotateTo(-90);
+	drive(150, 2000);
+	rotateTo(-179);
+	backLift.move_absolute(-2750, -127);
+	drive(-790, 4000, 0.73);
+	backLift.move_absolute(-500, 127);
+	drive(100);
+	rotateTo(-90);
+	drive(500);
 }
 
 //autonomous(will be called by competition)
-void autonomous()	
+void autonomous()
 {
 	/*
 	KEY:
@@ -1072,8 +1084,6 @@ void autonomous()
 	long = gets at least 2 goals
 	short = only gets one win point from alliance mobile goal
 	*/
-
-	/*
 
 	while(!killAuton)
 	{
@@ -1095,7 +1105,7 @@ void autonomous()
 			if(autonColor == 1) {redDeElevatedLong();}
 			else {blueDeElevatedLong();}
 		}
-		
+
 		if(autonType == 4)
 		{
 			if(autonColor == 1) {redDeElevatedShort();}
@@ -1111,12 +1121,7 @@ void autonomous()
 		if(autonType == 6) {skills();}
 
 		break;
-		
 	}
-	*/
-	//goalsPossessed--;
-	rotate(90,10000,0.5);
-	
 }
 
 // main control functions ======================================================
@@ -1147,7 +1152,7 @@ void opcontrol()
 
 	while (true)
 	{
-		
+
 		// Drive loop (there's an arcadeDrive() function and tankDrive() function.
 
 		arcadeDrive(MANUAL);
@@ -1160,7 +1165,7 @@ void opcontrol()
 		printInfo();
 
 		if(con.get_digital(E_CONTROLLER_DIGITAL_DOWN)) { autonomous(); }
-	
+
 		delay(5);
 		globalTime += 5;
 	}
