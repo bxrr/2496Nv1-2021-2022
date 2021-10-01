@@ -393,7 +393,7 @@ void rotateTo(double degrees, int timeout=100000) { rotate(degrees - globalRotat
 
 PID drivePID(1.5,0,0);
 PID turnPID(1,1,1);
-PID autoStraight(1,0,0);
+PID autoStraightPID(1,0,0);
 
 void driveNew(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3) // timeout in milliseconds
 {
