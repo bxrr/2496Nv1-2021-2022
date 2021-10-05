@@ -40,7 +40,7 @@ class PID
     double calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
     {
         static double I = 0;
-		double error = initialPosition - currentPosition;
+		double error = target - (initialPosition - currentPosition);
         double lastError = positionDifference + error;
         double D = lastError - error;
         if(countIntegral) {I += error;}

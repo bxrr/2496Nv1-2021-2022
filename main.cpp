@@ -409,7 +409,7 @@ void driveNew(double targetEnc, int timeout = 4000, double maxspeed = .6, double
 	int withinRangeTime;
 	bool withinRange = false;
 	//modify(new kp, new ki, new kd)
-	drivePID.modify(drivePID.getkP() * (1 + goalsPossessed/3), 0, 0);
+	//drivePID.modify(drivePID.getkP() * (1 + goalsPossessed/3), 0, 0);
 
 	inert.set_heading(180);
 	double initialRotation = inert.get_heading();
@@ -417,19 +417,19 @@ void driveNew(double targetEnc, int timeout = 4000, double maxspeed = .6, double
 	kP *= (1 + goalsPossessed/3);
 	autoStraightPID.modify(kP);
 
-	while(timeout > localTime)
+	while(true)
 	{
-		currentPosition = (chas.getLeftPos() + chas.getRightPos()) / 2;
+		currentPosition = (leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2;
 		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
-		double speed = drivePID.calculate(initialPosition, currentPosition, targetEnc, false, 0);
-		
+		double speed = drivePID.calculate(0, currentPosition, targetEnc, false, 0);
+		if(localTime % 50 == 0) {con.print(1,0,"error: %.1f", currentPosition);}
 
 		double autoStraight = autoStraightPID.calculate(0, inert.get_heading(), initialRotation, false, 0);
 
-		speed = slewMult * ((abs(speed) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : speed);
+		//speed = slewMult * ((abs(speed) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : speed);
 
-		chas.spinLeft(speed * maxspeed + autoStraight * (speed/80));
-		chas.spinRight(speed * maxspeed - autoStraight * (speed/80));
+		chas.spinLeft(speed * maxspeed );
+		chas.spinRight(speed * maxspeed );
 
 
 		if(abs(targetEnc - (currentPosition - initialPosition)) < errorRange)
@@ -439,7 +439,7 @@ void driveNew(double targetEnc, int timeout = 4000, double maxspeed = .6, double
 				withinRangeTime = localTime;
 				withinRange = true;
 			}
-			else if(localTime >= withinRangeTime + 500) { break; }
+			//else if(localTime >= withinRangeTime + 500) { pass; }
 		}
 
 		else { withinRange = false; }
@@ -708,8 +708,12 @@ void park()
 
 // lifts
 bool front = true;
+double backSpeed = 0;
 void liftControl()
 {
+	static bool firstTime = false;
+	static bool changeVelocity = true;
+	static int startTime = 0;
 	// Check if 'X' is being pressed and set back lift to coast if it is
 	if(con.get_digital(E_CONTROLLER_DIGITAL_X))
 		backLift.set_brake_mode(E_MOTOR_BRAKE_COAST);
@@ -738,6 +742,9 @@ void liftControl()
 				backLift.move(127);
 				frontLift.move(0);
 			}
+			firstTime = true;
+			changeVelocity = true;
+			startTime = 0;
 		}
 		// Move lift down
 		else if(con.get_digital(E_CONTROLLER_DIGITAL_R2))
@@ -752,12 +759,28 @@ void liftControl()
 				backLift.move(-127);
 				frontLift.move(0);
 			}
+			firstTime = true;
+			changeVelocity = true;
+			startTime = 0;
 		}
 		// No buttons are being pressed so stop both lifts
 		else
 		{
+			if(firstTime) 
+			{
+				startTime = globalTime;
+				firstTime = false;
+			}
+			if(globalTime - startTime <= 200) {backSpeed = 0;}
+			else if(globalTime - startTime > 200 && changeVelocity) 
+			{
+				backSpeed = -backLift.get_actual_velocity();
+				changeVelocity = false;
+			}
+			
+			if(globalTime - startTime > 700 && abs(backLift.get_actual_velocity()) > 1) {changeVelocity = true;}
 			frontLift.move(0);
-			backLift.move(0);
+			backLift.move(backSpeed);
 		}
 	}
 }
@@ -837,9 +860,12 @@ void printInfo()
 			*/
 
 			//con.print(0,0,"inert: %.2f", inert.get_heading());
+			/*
 			double speed = (chas.getVelocity() * 400 * 3.14 * 60 * 3) / (63360 * 5);
 			speed = speed < 0 ? -speed : speed;
 			con.print(0,0,"Speed: %.1f mph   ", speed);
+			*/
+			con.print(0,0,"%.1f", backLift.get_actual_velocity());
 		}
 		if(counter == 20)
 		{
@@ -889,29 +915,31 @@ void printInfo()
 
 void redElevatedLong()
 {
+	/*
 	goalsPossessed = 0;
-	drive(405, 2300, 1, 10);
-	drive(111,100, 1);
+	drive(405, 1800, 1, 10);
+	drive(111,230, 1);
 	frontPneu.toggle();
 	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
-	drive(-200,1000);
-	backLift.move_absolute(-2000,-127);
+	drive(-205,1000);
+	backLift.move_absolute(-2230,-127);
 	rotateTo(-95,2000);
-	drive(-33,1000);
-	backLift.move_absolute(-2400,-127);
+	drive(-38,1000);
 	delay(400);
-	drive(80,1000);
+	drive(150,1000);
 	delay(500);
-	rotateTo(-74, 1000);
+	rotateTo(-68.5, 1000);
 	backLift.move_absolute(-3000,-127);
 	delay(500);
-	drive(-170,1000);
+	drive(-250,1500);
 	backLift.move_absolute(-2000,127);
 	delay(400);
 	rotateTo(-100,1000);
 	drive(200);
+	*/
+	driveNew(30);
 
 }
 
