@@ -26,6 +26,10 @@ public:
 
     // Spin methods ======================================================
     enum unitType {PCT, VOLT};
+
+
+
+
     void spinLeft(double speed, unitType unit=VOLT) // VOLT is -127 to 127, PCT is -100 to 100
     {
         speed = (reverse) ? (-speed) : (speed);
@@ -59,6 +63,9 @@ public:
             frontRight.move(speed * 127 / 100);
         }
     }
+
+
+    
 
     // Change brake type/stop ===================================================
     void stop()
@@ -161,5 +168,19 @@ public:
       return (backRight.get_temperature() +
               midRight.get_temperature() +
               frontRight.get_temperature()) / 3;
+    }
+
+
+    void spinTo(double enc, int speedRaw)
+    {
+        int speed = enc >= 0 ? speedRaw : -speedRaw;
+        double startPos = frontLeft.get_position();
+        changeBrake(COAST);
+        while(abs(frontLeft.get_position() - startPos) < enc)
+        {
+          spinLeft(speed);
+          spinRight(speed);
+        }
+        stop();
     }
 };

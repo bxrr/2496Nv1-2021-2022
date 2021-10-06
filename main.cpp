@@ -13,6 +13,7 @@ Chassis chas;
 
 Piston frontPneu(FRONT_PNEUMATIC_PORT);
 Piston backPneu(BACK_PNEUMATIC_PORT);
+Piston frontSpecialPneu(FRONT_SPECIAL_PNUEMATIC_PORT);
 Motor backLift(BACK_LIFT_PORT, E_MOTOR_GEARSET_18, false);
 Motor frontLift(FRONT_LIFT_PORT, E_MOTOR_GEARSET_36, false);
 
@@ -37,54 +38,11 @@ void checkInertial(int lineNum=1)
 }
 
 
-/*
-void autonSelector()
-{
-	static bool firstTime = true;
-	static int localTime = 0;
-	if(localTime > 100) {localTime = 0;}
-	if(localTime == 50) {con.set_text(0,0, "Select Auton:");}
-
-	if (con.get_digital(E_CONTROLLER_DIGITAL_RIGHT))
-	{
-		con.clear();
-		if(autonNum == 6){autonNum = 1;}
-		else{autonNum++;}
-		while (con.get_digital(E_CONTROLLER_DIGITAL_RIGHT)){}
-	}
-	else if (con.get_digital(E_CONTROLLER_DIGITAL_LEFT))
-	{
-		con.clear();
-		if(autonNum == 0){autonNum = 6;}
-		else{autonNum--;}
-		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
-	}
-
-	if(localTime ==100)
-	{
-		if (autonNum == 1){con.set_text(1,0, "Red  1");}
-		else if (autonNum == 2){con.set_text(1,0, "Red  2");}
-		else if (autonNum == 3){con.set_text(1,0, "Blue 1");}
-		else if (autonNum == 4){con.set_text(1,0, "Blue 2");}
-		else if (autonNum == 5){con.set_text(1,0, "Skills");}
-		else if(autonNum == 6) {con.set_text(1,0, "None");}
- 	}
-
-	if (con.get_digital(E_CONTROLLER_DIGITAL_A))
-	{
-		autonCurrentlySelecting = false;
-	}
-
-	localTime += 5;
-	delay(5);
-
-}
-*/
-
 bool autonCurrentlySelecting = true;
 int autonType = 1;
 int autonColor = 1;
 bool autonTypeSelected = false;
+bool speedMode = false;
 void autonSelector()
 {
 	static bool firstTime = true;
@@ -99,8 +57,9 @@ void autonSelector()
 		else if (autonType == 3){con.set_text(1,0, "De-elevated Long      ");}
 		else if (autonType == 4){con.set_text(1,0, "De-elevated short     ");}
 		else if (autonType == 5) {con.set_text(1,0, "Both               ");}
-		else if (autonType == 6){con.set_text(1,0, "Skills               ");}
-		else if(autonType == 7) {con.set_text(1,0, "None                  ");}
+		else if (autonType == 6) {con.set_text(1,0, "Rush Neutral       ");}
+		else if (autonType == 7){con.set_text(1,0, "Skills               ");}
+		else if(autonType == 8) {con.set_text(1,0, "None                  ");}
 	}
 
 	if(autonTypeSelected)
@@ -123,7 +82,7 @@ void autonSelector()
 		}
 		else
 		{
-			if(autonType == 8) {autonType = 1;}
+			if(autonType == 9) {autonType = 1;}
 			else {autonType++;}
 		}
 
@@ -140,7 +99,7 @@ void autonSelector()
 		}
 		else
 		{
-			if(autonType == 0) {autonType = 7;}
+			if(autonType == 0) {autonType = 8;}
 			else {autonType--;}
 		}
 		while (con.get_digital(E_CONTROLLER_DIGITAL_LEFT)){}
@@ -162,6 +121,25 @@ void autonSelector()
 			{
 				autonTypeSelected = true;
 				while(con.get_digital(E_CONTROLLER_DIGITAL_A)) {}
+			}
+		}
+	}
+	else if (con.get_digital(E_CONTROLLER_DIGITAL_X))
+	{
+		if(autonType >= 6) {autonCurrentlySelecting = false;}
+		else
+		{
+			if(autonTypeSelected)
+			{
+				autonCurrentlySelecting = false;
+				while(con.get_digital(E_CONTROLLER_DIGITAL_X)) {}
+			}
+
+			else
+			{
+				autonTypeSelected = true;
+				speedMode = true;
+				while(con.get_digital(E_CONTROLLER_DIGITAL_X)) {}
 			}
 		}
 	}
@@ -789,6 +767,17 @@ void liftControl()
 void pneumaticControl()
 {
 	// Check if l2 is pressed down, meaning driver wants to control the pneumatics
+	static bool firstPress3 = true;
+	if(con.get_digital(E_CONTROLLER_DIGITAL_X))
+	{
+		// Check if this is R2's initial press, and toggle the pneumatic if it is.
+		if(firstPress3)
+		{
+			frontSpecialPneu.toggle();
+			firstPress3 = false;
+		}
+	}
+
 	if(con.get_digital(E_CONTROLLER_DIGITAL_L2))
 	{
 		// firstPress1 boolean is used to make sure the front pneumatic
@@ -819,6 +808,7 @@ void pneumaticControl()
 				firstPress2 = false;
 			}
 		}
+
 		// Allow the pneumatic to be toggled again after the button has been released
 		else
 			firstPress2 = true;
@@ -860,12 +850,10 @@ void printInfo()
 			*/
 
 			//con.print(0,0,"inert: %.2f", inert.get_heading());
-			/*
+			
 			double speed = (chas.getVelocity() * 400 * 3.14 * 60 * 3) / (63360 * 5);
 			speed = speed < 0 ? -speed : speed;
 			con.print(0,0,"Speed: %.1f mph   ", speed);
-			*/
-			con.print(0,0,"%.1f", backLift.get_actual_velocity());
 		}
 		if(counter == 20)
 		{
@@ -913,34 +901,31 @@ void printInfo()
 //rotate(degrees, timeout)
 
 
-void redElevatedLong()
+void redElevatedLong() // 10/6
 {
-	/*
 	goalsPossessed = 0;
-	drive(405, 1800, 1, 10);
+	drive(400, 1800, 1, 10);
 	drive(111,230, 1);
 	frontPneu.toggle();
 	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
-	drive(-205,1000);
+	drive(-215,1300);
 	backLift.move_absolute(-2230,-127);
 	rotateTo(-95,2000);
-	drive(-38,1000);
-	delay(400);
+	drive(50, 500);
+	drive(-88,1000, 0.4);
+	delay(250);
 	drive(150,1000);
-	delay(500);
-	rotateTo(-68.5, 1000);
+	delay(250);
+	rotate(23, 1000);
 	backLift.move_absolute(-3000,-127);
-	delay(500);
+	delay(250);
 	drive(-250,1500);
 	backLift.move_absolute(-2000,127);
-	delay(400);
-	rotateTo(-100,1000);
-	drive(200);
-	*/
-	driveNew(30);
-
+	delay(250);
+	rotate(-50, 1000);
+	drive(200, 1000);
 }
 
 void redElevatedShort()
@@ -978,55 +963,55 @@ void redDeElevatedShort()
 	drive(-150);
 }
 
-void redBoth()
+void redBoth() // 10/6
 {
 	drive(130, 2000);
 	drive(25, 350);
 	drive(-150, 1000);
-	rotateTo(-90);
+	rotateTo(-90, 2000);
 	drive(160, 2000);
 	rotateTo(-179);
 	backLift.move_absolute(-1600, -127);
 	drive(-790, 4000, 0.73);
-	rotate(10, 500);
+	rotate(20, 500);
 	backLift.move_absolute(-1800, -127);
-	drive(-25, 200);
+	drive(-15, 200);
 	backLift.move_absolute(-2450, -127);
 	delay(400);
-	rotate(-10, 500);
+	rotate(-25, 500);
 	drive(100, 400);
 	backLift.move_absolute(-2750, -127);
-	drive(-230, 2000);
+	drive(-165, 2000);
 	backLift.move_absolute(-2000, 127);
 	delay(300);
 	drive(210);
 }
 
-void blueElevatedLong()
+void blueElevatedLong() // 10/6
 {
 	goalsPossessed = 0;
-	drive(405, 2300, 1, 10);
-	drive(111,100, 1);
+	drive(400, 1800, 1, 10);
+	drive(111,230, 1);
 	frontPneu.toggle();
 	frontLift.move_absolute(-200,-127);
 	goalsPossessed = -0.3;
 	delay(300);
-	drive(-200,1000);
-	backLift.move_absolute(-2000,-127);
+	drive(-215,1300);
+	backLift.move_absolute(-2230,-127);
 	rotateTo(-95,2000);
-	drive(-33,1000);
-	backLift.move_absolute(-2400,-127);
-	delay(400);
-	drive(80,1000);
-	delay(500);
-	rotateTo(-74, 1000);
+	drive(50, 500);
+	drive(-88,1000, 0.4);
+	delay(250);
+	drive(150,1000);
+	delay(250);
+	rotate(23, 1000);
 	backLift.move_absolute(-3000,-127);
-	delay(500);
-	drive(-170,1000);
+	delay(250);
+	drive(-200,1500);
 	backLift.move_absolute(-2000,127);
-	delay(400);
-	rotateTo(-100,1000);
-	drive(200);
+	delay(250);
+	rotate(-50, 1000);
+	drive(200, 1000);
 }
 
 void blueElevatedShort()
@@ -1107,6 +1092,17 @@ void skills()
 	drive(500);
 }
 
+
+void neutralRush()
+{
+	chas.spinTo(2400,127);
+	frontPneu.toggle();
+	frontLift.move_absolute(-600, -127);
+	delay(200);
+	drive(-400);
+	rotate(-140,4000,0.4);
+}
+
 //autonomous(will be called by competition)
 void autonomous()
 {
@@ -1153,7 +1149,9 @@ void autonomous()
 			else {blueBoth();}
 		}
 
-		if(autonType == 6) {skills();}
+
+		if(autonType == 6) {neutralRush();}
+		if(autonType == 7) {skills();}
 
 		break;
 	}
