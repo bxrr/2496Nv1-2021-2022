@@ -42,7 +42,6 @@ bool autonCurrentlySelecting = true;
 int autonType = 1;
 int autonColor = 1;
 bool autonTypeSelected = false;
-bool speedMode = false;
 void autonSelector()
 {
 	static bool firstTime = true;
@@ -121,25 +120,6 @@ void autonSelector()
 			{
 				autonTypeSelected = true;
 				while(con.get_digital(E_CONTROLLER_DIGITAL_A)) {}
-			}
-		}
-	}
-	else if (con.get_digital(E_CONTROLLER_DIGITAL_X))
-	{
-		if(autonType >= 6) {autonCurrentlySelecting = false;}
-		else
-		{
-			if(autonTypeSelected)
-			{
-				autonCurrentlySelecting = false;
-				while(con.get_digital(E_CONTROLLER_DIGITAL_X)) {}
-			}
-
-			else
-			{
-				autonTypeSelected = true;
-				speedMode = true;
-				while(con.get_digital(E_CONTROLLER_DIGITAL_X)) {}
 			}
 		}
 	}

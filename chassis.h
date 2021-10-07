@@ -173,7 +173,7 @@ public:
 
     void spinTo(double enc, int speedRaw)
     {
-        int speed = enc >= 0 ? speedRaw : -speedRaw;
+        int speed = speedRaw > 0 ? enc >= 0 ? speedRaw : -speedRaw : speedRaw;
         double startPos = frontLeft.get_position();
         changeBrake(COAST);
         while(abs(frontLeft.get_position() - startPos) < enc)
