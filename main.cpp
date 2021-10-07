@@ -766,18 +766,7 @@ void liftControl()
 // Pneumatics
 void pneumaticControl()
 {
-	// Check if l2 is pressed down, meaning driver wants to control the pneumatics
-	static bool firstPress3 = true;
-	if(con.get_digital(E_CONTROLLER_DIGITAL_X))
-	{
-		// Check if this is R2's initial press, and toggle the pneumatic if it is.
-		if(firstPress3)
-		{
-			frontSpecialPneu.toggle();
-			firstPress3 = false;
-		}
-	}
-
+	// Check if l2 is pressed down, meaning driver wants to control the pneumatic
 	if(con.get_digital(E_CONTROLLER_DIGITAL_L2))
 	{
 		// firstPress1 boolean is used to make sure the front pneumatic
@@ -806,6 +795,17 @@ void pneumaticControl()
 			{
 				frontPneu.toggle();
 				firstPress2 = false;
+			}
+		}
+
+		static bool firstPress3 = true;
+		if(con.get_digital(E_CONTROLLER_DIGITAL_L1))
+		{
+			// Check if this is R2's initial press, and toggle the pneumatic if it is.
+			if(firstPress3)
+			{
+				frontSpecialPneu.toggle();
+				firstPress3 = false;
 			}
 		}
 
