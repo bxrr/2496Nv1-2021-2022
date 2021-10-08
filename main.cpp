@@ -278,7 +278,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 
 	while(!killAuton)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %d", error);}
+		if(time % 50 == 0) {con.print(1,0,"GH: %d", degrees);}
 		currentRotation = inert.get_heading();
 
 		if(time % 200 == 0)
@@ -778,6 +778,9 @@ void pneumaticControl()
 			}
 		}
 
+		else
+			firstPress2 = true;
+
 		static bool firstPress3 = true;
 		if(con.get_digital(E_CONTROLLER_DIGITAL_L1))
 		{
@@ -791,7 +794,7 @@ void pneumaticControl()
 
 		// Allow the pneumatic to be toggled again after the button has been released
 		else
-			firstPress2 = true;
+			firstPress3 = true;
 	}
 }
 
