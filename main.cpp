@@ -485,6 +485,19 @@ void rotateSpecial(double degrees, int timeout = 60000, double maxspeed = 1)
 enum arcadeTypes {MANUAL, AUTO};
 void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 {
+	if(abs(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y)) > 10 || abs(con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) > 10)
+	{
+		double turnStick = (chas.reverseStatus()) ? (-con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X)) : (con.get_analog(E_CONTROLLER_ANALOG_RIGHT_X));
+		chas.spinLeft(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) + turnStick);
+		chas.spinRight(con.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) - turnStick);
+	}
+	else
+	{
+	chas.stop();
+	}
+}
+	
+	
 	if(arcadeType == MANUAL)
 	{
 
