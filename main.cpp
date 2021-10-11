@@ -136,18 +136,21 @@ void autonSelector()
 double goalsPossessed = 0;
 bool killAuton = false;
 
-void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3) // timeout in milliseconds
-{
+void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3)  
+{	
+	/*drive function called with targetEnc required, timeout defaulted to 4 seconds,
+	maxspeed defaulted to 60%, and max error range to exit at 3 encoders */
+	
 	// Timeout counter
 	int time = 0;
 
-	float slewMult = 0.05;
+	float slewMult = 0.05;	//slew to prevent jerk
 
 	// Drive distance variables: uses motor encodings with distance error
 	double leftStartPos = chas.getLeftPos();
 	double rightStartPos = chas.getRightPos();
 
-	double distError = 0.1;
+	double distError = 0.1;		
 	double currentPos = 0.0;
 	double baseSpeed = 0.0;
 
@@ -160,22 +163,17 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 	inert.set_heading(180);
 	double initialRotation = inert.get_heading();
 
-	double lastError, derivative;
 	double error = 0.0;
-	double integral = 0.0;
 
 	float kP = (targetEnc >= 0) ? (1) : (-1);
-	kP *= (1 + goalsPossessed/3);
-
-	con.clear();
+	kP *= (1 + goalsPossessed/3);		//change kP based on how many goals(will change weight of robot)
 
 	// Drive loop, might add a timeout thing if it's needed
-	while(timeout > time && !killAuton)
+	while(timeout > time && !killAuton)		//killAuton exits auton in case of crucial error to prevent damage
 	{
-		if(time % 50 == 0) {con.print(1,0,"error: %.1f", distError);}
 		// Drive code: Distance error set to target encoding - average of left + right encodings
 		distError = targetEnc - ((leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2);
-		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : (distError * distKp)); //? (distError * distKp) : (5); // If the base speed is below 3.5, set the base speed to 3.5
+		baseSpeed = slewMult * ((abs(distError * distKp) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : (distError * distKp));
 		if(distError < -3)
 		{
 			baseSpeed = (baseSpeed > -15) ? (-15) : (baseSpeed);
@@ -186,21 +184,18 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 		}
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
 
-
-		lastError = error;
 		error = initialRotation - inert.get_heading();
-		if(abs(error) > 21)
+		if(abs(error) > 25)	//kill auton if the robot jerks off course severely
 		{
 			killAuton = true;
 			break;
 		}
-		integral += error;
-		derivative = error - lastError;
 
 		// Apply speeds
 		chas.spinLeft(baseSpeed + (error * kP)*(baseSpeed/80));
 		chas.spinRight(baseSpeed - (error * kP)*(baseSpeed/80));
 
+		//break if within error range for more than 500 ms
 		if(abs(distError) < errorRange)
 		{
 			if(!withinRange)
@@ -208,10 +203,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 				withinRangeTime = time;
 				withinRange = true;
 			}
-			else if(time >= withinRangeTime + 500)
-			{
-				break;
-			}
+			else if(time >= withinRangeTime + 500) { break; }
 		}
 		else
 		{
@@ -221,15 +213,15 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 		// delay while loop
 		delay(10);
 		time += 10;
-		// check timeout
 
 		currentPos = chas.getLeftPos();
 		if(slewMult < 1) {slewMult += 0.05;}
 	}
+
 	// Stop robot after loop
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
-	globalRotation += inert.get_heading() - initialRotation;
+	globalRotation += inert.get_heading() - initialRotation;	//used for absolute rotate function
 }
 
 
@@ -244,7 +236,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 	if(speedM > 1) {speedM = speedM/100;}
 	int time = 0;
 
-	// Rotate variables: Uses inertial sensor and slows down as it gets closer to the target by using an error
+	// ensure the inertial sensor does not go from 359 degrees to 0
 	if(degrees < 0)
 		inert.set_heading(350);
 	else if(degrees > 0)
@@ -252,7 +244,6 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
     else
 		return;
 
-	//double globalHeading = inert.get_heading();
 	double targetHeading = inert.get_heading() + degrees;
 	double currentRotation = inert.get_heading();
 	double initialRotation = inert.get_heading();
@@ -278,20 +269,12 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 
 	while(!killAuton)
 	{
-		if(time % 50 == 0) {con.print(1,0,"GH: %d", degrees);}
 		currentRotation = inert.get_heading();
 
 		if(time % 200 == 0)
 		{
 			errorCheck = error;
 		}
-
-		/*
-		if(dir == CW)
-			globalHeading += (currentRotation >= lastRotation) ? (currentRotation - lastRotation) : ((360 - lastRotation) + currentRotation);
-		else
-			globalHeading += (currentRotation <= lastRotation) ? (currentRotation - lastRotation) : ((currentRotation - 360) - lastRotation);
-		*/
 
 		lastError = error;
 		error = targetHeading - currentRotation;
@@ -322,15 +305,9 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 				withinRangeTime = time;
 				withinRange = true;
 			}
-			else if(time >= withinRangeTime + 300)
-			{
-				break;
-			}
+			else if(time >= withinRangeTime + 300) { break; }
 		}
-		else
-		{
-			withinRange = false;
-		}
+		else { withinRange = false; }
 
 		if(time > timeout) {break;}
 
@@ -341,7 +318,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 	// Stop robot after loop
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
-	globalRotation += inert.get_heading() - initialRotation;
+	globalRotation += inert.get_heading() - initialRotation; 	//is used for absolute rotate
 }
 
 
