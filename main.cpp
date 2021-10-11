@@ -321,7 +321,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 	globalRotation += inert.get_heading() - initialRotation; 	//is used for absolute rotate
 }
 
-
+//absolute rotate
 void rotateTo(double degrees, int timeout=100000) { rotate(degrees - globalRotation, timeout); }
 
 
