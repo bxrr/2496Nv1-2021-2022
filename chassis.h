@@ -95,7 +95,7 @@ public:
         midLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
         midRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
       }
-      else
+      else //brake type = S_HOLD
       {
         if (reverse) {kP = -kP;}
         double speed = inertialv * kP;
