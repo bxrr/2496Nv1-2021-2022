@@ -643,10 +643,10 @@ void park()
 
 
 // lifts
-bool front = true;
-double backSpeed = 0;
 void liftControl()
 {
+	static bool front = true;
+	static double backSpeed = 0;
 	static bool firstTime = false;
 	static bool changeVelocity = true;
 	static int startTime = 0;
