@@ -809,12 +809,8 @@ void printInfo()
 			if(chas.reverseStatus() == false) {con.set_text(0, 0, "Chas: FORWARD");}
 			else {con.set_text(0,0, "Chas: REVERSE");}
 			*/
-
-			//con.print(0,0,"inert: %.2f", inert.get_heading());
 			
-			double speed = (chas.getVelocity() * 400 * 3.14 * 60 * 3) / (63360 * 5);
-			speed = speed < 0 ? -speed : speed;
-			con.print(0,0,"Speed: %.1f mph   ", speed);
+			con.print(0,0,"inert: %.2f", inert.get_heading());
 		}
 		if(counter == 20)
 		{
@@ -862,7 +858,7 @@ void printInfo()
 //rotate(degrees, timeout)
 
 
-void redElevatedLong() // 10/6
+void redElevatedLong() // 10/11
 {
 	goalsPossessed = 0;
 	drive(400, 1800, 1, 10);
@@ -898,7 +894,7 @@ void redElevatedShort()
 	drive(-150);
 }
 
-void redDeElevatedLong()
+void redDeElevatedLong()	//10/11
 {
 	drive(400, 1750, 1, 12);
 	drive(200, 180, 0.8);
@@ -924,26 +920,23 @@ void redDeElevatedShort()
 	drive(-150);
 }
 
-void redBoth() // 10/6
+void redBoth() // 10/11
 {
 	drive(130, 2000);
 	drive(25, 350);
 	drive(-150, 1000);
 	rotateTo(-90, 2000);
-	drive(160, 2000);
+	drive(175, 2000);
 	rotateTo(-179);
-	backLift.move_absolute(-1600, -127);
-	drive(-790, 4000, 0.73);
-	rotate(20, 500);
-	backLift.move_absolute(-1800, -127);
-	drive(-15, 200);
-	backLift.move_absolute(-2450, -127);
-	delay(400);
-	rotate(-25, 500);
-	drive(100, 400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2150, -127);
+	rotate(16, 700);
+	delay(600);
+	drive(-90, 1300, 0.4);
+	drive(100, 1500);
 	backLift.move_absolute(-2750, -127);
-	drive(-165, 2000);
-	backLift.move_absolute(-2000, 127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
 	delay(300);
 	drive(210);
 }
@@ -1056,7 +1049,7 @@ void skills()
 
 void neutralRush()
 {
-	chas.spinTo(2400,127);
+	chas.spinTo(2100,127);
 	frontPneu.toggle();
 	frontLift.move_absolute(-600, -127);
 	delay(200);
