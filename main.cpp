@@ -1031,19 +1031,32 @@ void blueBoth()
 
 void skills()
 {
+	backLift.move_absolute(-2450, -127);
+	delay(1500);
+	drive(-130, 2000);
+	backLift.move_absolute(0, 127); 
+	goalsPossessed++;
+	delay(1500); // first alliance goal should be obtained by here
 	drive(130, 2000);
-	frontPneu.toggle();
-	frontLift.move_absolute(-600, -127);
-	drive(-150, 1000);
 	rotateTo(-90);
-	drive(150, 2000);
+	drive(140, 2000);
 	rotateTo(-179);
-	backLift.move_absolute(-2750, -127);
-	drive(-790, 4000, 0.73);
-	backLift.move_absolute(-500, 127);
-	drive(100);
-	rotateTo(-90);
-	drive(500);
+	drive(-700, 4000, 0.73); // drive far towards 2nd alliance goal
+	backLift.move_absolute(-2450, -127);
+	drive(-150, 2000, 0.5);
+	backLift.move_absolute(-1000, 126);
+	delay(750); // 2nd alliance goal should be obtained by here
+	goalsPossessed++;
+	drive(800), 1500;
+	rotateTo(-270, 1500);
+	drive(400, 1500);
+	drive(150, 1500);
+	frontPneu.toggle(); // 3rd alliance goal should be obtained here
+	goalsPossessed++;
+	frontLift.move_absolute(-2000, -127);
+	drive(400, 2000);
+	rotate(90);
+	
 }
 
 
