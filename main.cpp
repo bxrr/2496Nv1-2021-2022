@@ -256,7 +256,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 	double speed = 0.0;
 
 	double rotateStartI = goalsPossessed + (1 + goalsPossessed/4);
-	float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees))) * (1 + goalsPossessed/2);
+	float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees))) * (1 + goalsPossessed/6);
 	float kI = 0.1;
 	float kD = 2;
 
@@ -322,7 +322,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 }
 
 //absolute rotate
-void rotateTo(double degrees, int timeout=100000) { rotate(degrees - globalRotation, timeout); }
+void rotateTo(double degrees, int timeout=100000, double speedM  = 1) { rotate(degrees - globalRotation, timeout, speedM); }
 
 
 
@@ -609,11 +609,11 @@ void autoBrakeMode()	//automatically sets brake mode
 
 void park()
 {
-	static bool parking = false;
+	bool parking = false;
 	while(true)
 	{
 		backLift.move(25);
-		if(abs(inert.get_pitch()) > 1) {frontLift.move(-30);}
+		//f(abs(inert.get_pitch()) > 1) {frontLift.move(-30);}
 
 		if(abs(inert.get_pitch() > 21))
 		{
@@ -626,7 +626,7 @@ void park()
 			chas.spinRight(127);
 		}
 
-		else if(abs(inert.get_pitch()) < 20.5 && parking)
+		else if(abs(inert.get_pitch()) < 21 && parking)
 		{
 			chas.stop();
 			chas.changeBrake(chas.HOLD);
@@ -636,7 +636,7 @@ void park()
 
 		else
 		{
-			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 2.5 + 0.3 * goalsPossessed);
+			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 4.7 + 0.3 * goalsPossessed);
 		}
 	}
 }
@@ -1029,7 +1029,7 @@ void blueBoth()
 }
 
 
-void skills()
+void skillsFuture()
 {
 	backLift.move_absolute(-2450, -127);
 	delay(1500);
@@ -1059,6 +1059,44 @@ void skills()
 	
 }
 
+void skills()
+{
+	
+	drive(-220);
+	rotateTo(90);
+	backLift.move_absolute(-3000, -127);
+	delay(1500);
+	drive(-120);
+	backLift.move_absolute(-1000, 127);
+	goalsPossessed++;
+	delay(500);
+	drive(140);
+	rotateTo(0, 3000);
+	backLift.move_absolute(-800, 127);
+	delay(800);
+	backLift.move_absolute(300, 127);
+	delay(1500);
+	backLift.move_absolute(-3000, -127);
+	delay(1500);
+	drive(-250, 3000, 0.35);
+	backLift.move_absolute(-1500, 127);
+	//goalsPossessed++;
+	delay(1000);
+	backLift.move(20);
+	drive(-150);
+	rotateTo(26, 3000);
+	drive(-300);
+	rotateTo(180, 4000, 0.75);
+	drive(120);
+	rotateTo(105);
+	drive(120, 1200);
+	//frontPneu.toggle();
+	rotateTo(91, 1200);
+	goalsPossessed = 3;
+	park();
+
+}
+
 
 void neutralRush()
 {
@@ -1083,6 +1121,7 @@ void autonomous()
 	short = only gets one win point from alliance mobile goal
 	*/
 
+	
 	while(!killAuton)
 	{
 
@@ -1122,6 +1161,8 @@ void autonomous()
 
 		break;
 	}
+	
+	
 }
 
 // main control functions ======================================================
@@ -1144,7 +1185,6 @@ void opcontrol()
 {
 	lcd::set_text(0, "aayush the goat");
 	con.clear();
-
 	while(autonCurrentlySelecting) { autonSelector(); }
 
 	chas.changeBrake(chas.COAST);
@@ -1165,7 +1205,7 @@ void opcontrol()
 		printInfo();
 
 		if(con.get_digital(E_CONTROLLER_DIGITAL_DOWN)) { autonomous(); }
-
+		
 		delay(5);
 		globalTime += 5;
 	}
