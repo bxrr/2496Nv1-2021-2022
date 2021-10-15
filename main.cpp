@@ -322,7 +322,10 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 }
 
 //absolute rotate
-void rotateTo(double degrees, int timeout=100000, double speedM  = 1) { rotate(degrees - globalRotation, timeout, speedM); }
+void rotateTo(double degrees, int timeout=100000, double speedM  = 1) 
+{ 
+	rotate(degrees - globalRotation, timeout, speedM); 
+}
 
 
 
