@@ -1118,6 +1118,18 @@ void neutralRush()
 //autonomous(will be called by competition)
 void autonomous()
 {	
+	/*
+	KEY:
+	elevated = side with platform elevated
+	de-elevated = side with platform not elevated
+	both = starts from de-elevated side but utilizes both side, most likely use in quals
+	rush: rushes the neutral goal, will win 99% of the time, no win point, most likely use in elims
+
+	long = gets at least 2 goals
+	short = only gets one win point from alliance mobile goal
+	*/
+
+
 	while(!killAuton)
 	{
 
