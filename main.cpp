@@ -607,13 +607,13 @@ void autoBrakeMode()	//automatically sets brake mode
 }
 
 
-void park()
+void park(bool pistonUsed = false)
 {
 	bool parking = false;
 	while(true)
 	{
 		backLift.move(25);
-		//f(abs(inert.get_pitch()) > 1) {frontLift.move(-30);}
+		if(abs(inert.get_pitch()) > 1 && pistonUsed) {frontLift.move(-30);}
 
 		if(abs(inert.get_pitch() > 21))
 		{
@@ -1110,18 +1110,7 @@ void neutralRush()
 
 //autonomous(will be called by competition)
 void autonomous()
-{
-	/*
-	KEY:
-	elevated = side with platform elevated
-	de-elevated = side with platform not elevated
-	both = starts from de-elevated side but utilizes both side
-
-	long = gets at least 2 goals
-	short = only gets one win point from alliance mobile goal
-	*/
-
-	
+{	
 	while(!killAuton)
 	{
 
@@ -1160,9 +1149,7 @@ void autonomous()
 		if(autonType == 7) {skills();}
 
 		break;
-	}
-	
-	
+	}	
 }
 
 // main control functions ======================================================
