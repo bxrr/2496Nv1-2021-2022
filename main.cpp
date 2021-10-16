@@ -865,7 +865,7 @@ void printInfo()
 //rotate(degrees, timeout)
 
 
-void redElevatedLong() // 10/11
+void redElevatedLong() // final b4 comp for all reds
 {
 	goalsPossessed = 0;
 	drive(400, 1800, 1, 10);
@@ -882,13 +882,13 @@ void redElevatedLong() // 10/11
 	delay(250);
 	drive(150,1000);
 	delay(250);
-	rotate(23, 1000);
+	rotate(18.5, 1000);
 	backLift.move_absolute(-3000,-127);
 	delay(250);
 	drive(-250,1500);
 	backLift.move_absolute(-2000,127);
 	delay(250);
-	rotate(-50, 1000);
+	rotate(-55, 1000);
 	drive(200, 1000);
 }
 
@@ -901,20 +901,24 @@ void redElevatedShort()
 	drive(-150);
 }
 
-void redDeElevatedLong()	//10/11
+void redDeElevatedLong()
 {
-	drive(400, 1750, 1, 12);
-	drive(200, 180, 0.8);
-	frontPneu.toggle();
-	drive(-100, 500, 1, 10);
-	frontLift.move_absolute(-200,-127);
-	drive(-307,1500);
-	backLift.move_absolute(-1800, -127);
-	rotateTo(-90,2000);
-	drive(-14,500);
-	backLift.move_absolute(-2450, -127);
-	delay(1000);
-	drive(180, 1200);
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
+	drive(175, 2000);
+	rotateTo(-179, 1400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
+	delay(400);
+	drive(-90, 1300, 0.4);
+	drive(100, 1000);
+	backLift.move_absolute(-2750, -127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
+	delay(300);
+	drive(210);
 }
 
 void redDeElevatedShort()
@@ -929,18 +933,17 @@ void redDeElevatedShort()
 
 void redBoth() // 10/11
 {
-	drive(130, 2000);
-	drive(25, 350);
-	drive(-150, 1000);
-	rotateTo(-90, 2000);
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
 	drive(175, 2000);
-	rotateTo(-179);
+	rotateTo(-179, 1400);
 	drive(-755, 4000, 0.73);
-	backLift.move_absolute(-2150, -127);
-	rotate(16, 700);
-	delay(600);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
+	delay(400);
 	drive(-90, 1300, 0.4);
-	drive(100, 1500);
+	drive(100, 1000);
 	backLift.move_absolute(-2750, -127);
 	drive(-200, 1500);
 	backLift.move_absolute(-1800, 127);
@@ -948,7 +951,7 @@ void redBoth() // 10/11
 	drive(210);
 }
 
-void blueElevatedLong() // 10/6
+void blueElevatedLong()
 {
 	goalsPossessed = 0;
 	drive(400, 1800, 1, 10);
@@ -965,13 +968,13 @@ void blueElevatedLong() // 10/6
 	delay(250);
 	drive(150,1000);
 	delay(250);
-	rotate(23, 1000);
+	rotate(18.5, 1000);
 	backLift.move_absolute(-3000,-127);
 	delay(250);
-	drive(-200,1500);
+	drive(-250,1500);
 	backLift.move_absolute(-2000,127);
 	delay(250);
-	rotate(-50, 1000);
+	rotate(-55, 1000);
 	drive(200, 1000);
 }
 
@@ -986,19 +989,22 @@ void blueElevatedShort()
 
 void blueDeElevatedLong()
 {
-	drive(400, 1800, 1, 10);
-	drive(200,200);
-	frontPneu.toggle();
-	goalsPossessed = -0.3;
-	drive(-100, 500, 1, 10);
-	frontLift.move_absolute(-200,-127);
-	drive(-305,1500);
-	backLift.move_absolute(-1800, -127);
-	rotateTo(-86,2000);
-	drive(-30,800);
-	backLift.move_absolute(-2442, -127);
-	delay(1000);
-	drive(120, 1200);
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
+	drive(175, 2000);
+	rotateTo(-179, 1400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
+	delay(400);
+	drive(-90, 1300, 0.4);
+	drive(100, 1000);
+	backLift.move_absolute(-2750, -127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
+	delay(300);
+	drive(210);
 }
 
 void blueDeElevatedShort()
@@ -1013,24 +1019,20 @@ void blueDeElevatedShort()
 
 void blueBoth()
 {
-	drive(130, 2000);
-	drive(25, 350);
-	drive(-150, 1000);
-	rotateTo(-90);
-	drive(160, 2000);
-	rotateTo(-179);
-	backLift.move_absolute(-1600, -127);
-	drive(-790, 4000, 0.73);
-	rotate(10, 500);
-	backLift.move_absolute(-1800, -127);
-	drive(-25, 200);
-	backLift.move_absolute(-2450, -127);
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
+	drive(175, 2000);
+	rotateTo(-179, 1400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
 	delay(400);
-	rotate(-10, 500);
-	drive(100, 400);
+	drive(-90, 1300, 0.4);
+	drive(100, 1000);
 	backLift.move_absolute(-2750, -127);
-	drive(-230, 2000);
-	backLift.move_absolute(-2000, 127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
 	delay(300);
 	drive(210);
 }
@@ -1183,7 +1185,11 @@ void initialize()
 
 
 
-void disabled() {}
+void disabled() {
+	chas.changeBrake(chas.HOLD);
+	backLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
+	frontLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
+}
 
 void competition_initialize() {}
 
