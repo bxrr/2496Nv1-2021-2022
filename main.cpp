@@ -225,11 +225,6 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 }
 
 
-
-
-
-
-
 void rotate(double degrees, int timeout = 60000, double speedM = 1)
 {
 	// Timeout counter
@@ -327,6 +322,62 @@ void rotateTo(double degrees, int timeout=100000, double speedM  = 1)
 	rotate(degrees - globalRotation, timeout, speedM); 
 }
 
+// curve
+void curve(double degrees, double strength, double timeout)
+{
+	int time = 0;
+
+	if(degrees > 0)
+		inert.set_heading(10);
+	else if(degrees < 0)
+		inert.set_heading(350);
+	else
+		return;
+	
+	double startDeg = inert.get_heading();
+	double error;
+
+	float kP = 1.1;
+
+	int withinRangeTime = 0;
+	bool withinRange = false;
+
+	while(time <= timeout)
+	{
+		error = degrees - (inert.get_heading() - startDeg);
+
+		double baseSpeed = (error * kP)
+		if(degrees > 0)
+		{
+			chas.spinLeft(baseSpeed + (strength * (error/2) / 100));
+			chas.spinright(baseSpeed);
+		}
+		else
+		{
+			chas.spinLeft(baseSpeed);
+			chas.spinright(baseSpeed + (strength * (error/2) / 100));
+		}
+
+		if(abs(error < 1.0))
+		{
+			if(!withinRange)
+				withinRange = true;
+				withinRangeTime = time
+			else if(withinRangeTime + 400 <= time)
+			{
+				chas.stop()
+				return;
+			}
+		}
+		else
+		{
+			withinRange = false;
+		}
+
+		delay(5);
+		time += 5;
+	}
+}
 
 
 PID drivePID(1.5,0,0);
@@ -1065,7 +1116,6 @@ void skillsFuture()
 	frontLift.move_absolute(-2000, -127);
 	drive(400, 2000);
 	rotate(90);
-	
 }
 
 void skills()
