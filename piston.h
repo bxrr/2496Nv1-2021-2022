@@ -1,6 +1,3 @@
-#include "main.h"
-#include "ports.h"
-
 class Piston // pneumatic class
 {
 private:

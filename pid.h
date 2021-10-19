@@ -1,5 +1,4 @@
-#include "main.h"
-#include "ports.h"
+
 using namespace pros;
 
 class PID
@@ -10,6 +9,9 @@ class PID
         double kP;
         double kI;
         double kD;
+
+        double lastError;
+        double I;
     
     public:
 
@@ -21,30 +23,39 @@ class PID
             this->kD = kD;
         }
 
+        PID(double kP) : kI(0), kD(0)
+        {
+            this->kP = kP;
+        }
+
 
     //getters
     double getkP() {return kP;}
     double getkI() {return kI;}
     double getkD() {return kD;}
+    double getLast() {return lastError;}
+    
+    void resetI() {I = 0;}
 
     //change value of object PID
-    void modify(double kPnew, double kInew = 100000, double kDnew = 100000)
+    void modify(double kPnew, double kInew = -24204124, double kDnew = -24204124)
     {
         kP = kPnew;
-        if(kInew != 100000) {kI = kInew;}
-        if(kDnew != 100000) {kD = kDnew;}
+        if(kInew != -24204124) {kI = kInew;}
+        if(kDnew != -24204124) {kD = kDnew;}
     }
 
 
     //calculate speed to run chassis
-    double calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
+    double calculate(double currentPosition, double target, bool countIntegral)
     {
-        static double I = 0;
-		double error = target - (initialPosition - currentPosition);
-        double lastError = positionDifference + error;
+
+		double error = target - currentPosition;
         double D = lastError - error;
         if(countIntegral) {I += error;}
+        lastError = error;
         return (kP * error) + (kI * I) + (kD * D);
+        
     }
 
 };

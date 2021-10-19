@@ -1,3 +1,5 @@
+#include "piston.h"
+
 // Chassis
 #define BACK_LEFT_PORT 1
 #define MID_LEFT_PORT 3
