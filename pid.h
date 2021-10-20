@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> parent of 47d2a50 (october 18)
 #include "main.h"
 #include "ports.h"
 using namespace pros;

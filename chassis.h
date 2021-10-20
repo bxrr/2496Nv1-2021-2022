@@ -1,17 +1,11 @@
 #include "main.h"
 #include "ports.h"
-<<<<<<< HEAD
-<<<<<<< HEAD
 #include "globals.h"
 
 
 PID drivePID(0.5,0.01,7);
 PID autoStraightPID(2,0,0);
 PID turnPID(1,1,1);
-=======
->>>>>>> parent of 47d2a50 (october 18)
-=======
->>>>>>> parent of 47d2a50 (october 18)
 
 class Chassis
 {
@@ -308,9 +302,4 @@ public:
       turnPID.resetI();
       reset();
     }
-
-=======
->>>>>>> parent of 47d2a50 (october 18)
-=======
->>>>>>> parent of 47d2a50 (october 18)
 };

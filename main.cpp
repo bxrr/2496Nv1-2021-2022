@@ -1,12 +1,11 @@
 #include "main.h"
-#include "chassis.h"
-#include "ports.h"
-#include "piston.h"
-#include "pid.h"
+#include "autons.h"
+//autons has all includes through chains
 
 #include <string.h>
 
 using namespace pros;
+
 
 // Globals
 Chassis chas;
@@ -20,22 +19,20 @@ Motor frontLift(FRONT_LIFT_PORT, E_MOTOR_GEARSET_36, false);
 Imu inert(INERT_PORT);
 Controller con(E_CONTROLLER_MASTER);
 
+Motor backLeft(BACK_LEFT_PORT);
+Motor midLeft(MID_LEFT_PORT);
+Motor frontLeft(FRONT_LEFT_PORT);
+Motor backRight(BACK_RIGHT_PORT);
+Motor midRight(MID_RIGHT_PORT);
+Motor frontRight(FRONT_RIGHT_PORT);
+
+
 int globalTime;		//time since code has initialized, used as a timer
 bool disableAll = false;
 double globalRotation = 0;
 
+
 // misc functions ==============================================================
-void checkInertial(int lineNum=1)
-{
-	while(inert.is_calibrating())
-	{
-		lcd::set_text(lineNum, "inertial is calibrating...");
-	}
-	if(lcd::is_initialized())
-	{
-		lcd::clear_line(lineNum);
-	}
-}
 
 
 bool autonCurrentlySelecting = true;
@@ -136,38 +133,30 @@ void autonSelector()
 double goalsPossessed = 0;
 bool killAuton = false;
 
+/*
 void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3)  
 {	
 	/*drive function called with targetEnc required, timeout defaulted to 4 seconds,
-	maxspeed defaulted to 60%, and max error range to exit at 3 encoders */
+	maxspeed defaulted to 60%, and max error range to exit at 3 encoders 
 	
 	// Timeout counter
 	int time = 0;
-
 	float slewMult = 0.05;	//slew to prevent jerk
-
 	// Drive distance variables: uses motor encodings with distance error
 	double leftStartPos = chas.getLeftPos();
 	double rightStartPos = chas.getRightPos();
-
 	double distError = 0.1;		
 	double currentPos = 0.0;
 	double baseSpeed = 0.0;
-
 	float distKp = 1.5;
-
 	bool withinRange = false;
 	int withinRangeTime = 0;
-
 	// Drive straight variables: uses the intertial with PID
 	inert.set_heading(180);
 	double initialRotation = inert.get_heading();
-
 	double error = 0.0;
-
 	float kP = (targetEnc >= 0) ? (1) : (-1);
 	kP *= (1 + goalsPossessed/3);		//change kP based on how many goals(will change weight of robot)
-
 	// Drive loop, might add a timeout thing if it's needed
 	while(timeout > time && !killAuton)		//killAuton exits auton in case of crucial error to prevent damage
 	{
@@ -183,18 +172,15 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 			baseSpeed = (baseSpeed < 15) ? (15) : (baseSpeed);
 		}
 		// Drive straight code: Changes left side of the chassis' speed according to the intertial sensor's readings
-
 		error = initialRotation - inert.get_heading();
 		if(abs(error) > 25)	//kill auton if the robot jerks off course severely
 		{
 			killAuton = true;
 			break;
 		}
-
 		// Apply speeds
 		chas.spinLeft(baseSpeed + (error * kP)*(baseSpeed/80));
 		chas.spinRight(baseSpeed - (error * kP)*(baseSpeed/80));
-
 		//break if within error range for more than 500 ms
 		if(abs(distError) < errorRange)
 		{
@@ -209,28 +195,22 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = .6, double er
 		{
 			withinRange = false;
 		}
-
 		// delay while loop
 		delay(10);
 		time += 10;
-
 		currentPos = chas.getLeftPos();
 		if(slewMult < 1) {slewMult += 0.05;}
 	}
-
 	// Stop robot after loop
 	chas.changeBrake(chas.HOLD);
 	chas.stop();
 	globalRotation += inert.get_heading() - initialRotation;	//used for absolute rotate function
 }
-
-
 void rotate(double degrees, int timeout = 60000, double speedM = 1)
 {
 	// Timeout counter
 	if(speedM > 1) {speedM = speedM/100;}
 	int time = 0;
-
 	// ensure the inertial sensor does not go from 359 degrees to 0
 	if(degrees < 0)
 		inert.set_heading(350);
@@ -238,39 +218,30 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 		inert.set_heading(10);
     else
 		return;
-
 	double targetHeading = inert.get_heading() + degrees;
 	double currentRotation = inert.get_heading();
 	double initialRotation = inert.get_heading();
-
 	double error = targetHeading - currentRotation;
 	double lastError = error;
 	double integral = 0.0;
 	double derivative = 0.0;
-
 	double speed = 0.0;
-
 	double rotateStartI = goalsPossessed + (1 + goalsPossessed/4);
 	float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees))) * (1 + goalsPossessed/6);
 	float kI = 0.1;
 	float kD = 2;
-
 	bool integ = false;
 	bool withinRange = false;
 	int withinRangeTime = 0;
-
 	int sameErrorCount = 0;
 	double errorCheck;
-
 	while(!killAuton)
 	{
 		currentRotation = inert.get_heading();
-
 		if(time % 200 == 0)
 		{
 			errorCheck = error;
 		}
-
 		lastError = error;
 		error = targetHeading - currentRotation;
 		if(abs(error) <= rotateStartI)
@@ -285,14 +256,11 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 		{
 			sameErrorCount = 0;
 		}
-
 		if(integ) { integral += error; }
 		derivative = lastError - error;
 		speed = (error * kP) + (integral * kI) + (derivative * kD);
-
 		chas.spinLeft(speed * speedM);
 		chas.spinRight(-speed * speedM);
-
 		if(abs(error) <= 0.5)
 		{
 			if(!withinRange)
@@ -303,9 +271,7 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 			else if(time >= withinRangeTime + 300) { break; }
 		}
 		else { withinRange = false; }
-
 		if(time > timeout) {break;}
-
 		// delay while loop
 		delay(5);
 		time += 5;
@@ -315,18 +281,15 @@ void rotate(double degrees, int timeout = 60000, double speedM = 1)
 	chas.stop();
 	globalRotation += inert.get_heading() - initialRotation; 	//is used for absolute rotate
 }
-
 //absolute rotate
 void rotateTo(double degrees, int timeout=100000, double speedM  = 1) 
 { 
 	rotate(degrees - globalRotation, timeout, speedM); 
 }
-
 // curve
 void curve(double degrees, double strength, double timeout)
 {
 	int time = 0;
-
 	if(degrees > 0)
 		inert.set_heading(10);
 	else if(degrees < 0)
@@ -336,16 +299,12 @@ void curve(double degrees, double strength, double timeout)
 	
 	double startDeg = inert.get_heading();
 	double error;
-
 	float kP = 1.1;
-
 	int withinRangeTime = 0;
 	bool withinRange = false;
-
 	while(time <= timeout)
 	{
 		error = degrees - (inert.get_heading() - startDeg);
-
 		double baseSpeed = (error * kP)
 		if(degrees > 0)
 		{
@@ -357,7 +316,6 @@ void curve(double degrees, double strength, double timeout)
 			chas.spinLeft(baseSpeed);
 			chas.spinright(baseSpeed + (strength * (error/2) / 100));
 		}
-
 		if(abs(error < 1.0))
 		{
 			if(!withinRange)
@@ -373,181 +331,247 @@ void curve(double degrees, double strength, double timeout)
 		{
 			withinRange = false;
 		}
-
 		delay(5);
 		time += 5;
 	}
 }
-
-
-PID drivePID(1.5,0,0);
-PID turnPID(1,1,1);
-PID autoStraightPID(1,0,0);
-
-void driveNew(double targetEnc, int timeout = 4000, double maxspeed = .6, double errorRange = 3) // timeout in milliseconds
+void redElevatedLong() // final b4 comp for all reds
 {
-	if(maxspeed > 1) {maxspeed /= 100;}
-	int localTime = 0;
-	double currentPosition = 0;
-	int slewMult = 0;
-
-	double leftStartPos = chas.getLeftPos();
-	double rightStartPos = chas.getRightPos();
-	double initialPosition = (leftStartPos + rightStartPos) / 2;
-
-	int withinRangeTime;
-	bool withinRange = false;
-	//modify(new kp, new ki, new kd)
-	//drivePID.modify(drivePID.getkP() * (1 + goalsPossessed/3), 0, 0);
-
-	inert.set_heading(180);
-	double initialRotation = inert.get_heading();
-	float kP = (targetEnc >= 0) ? (1) : (-1);
-	kP *= (1 + goalsPossessed/3);
-	autoStraightPID.modify(kP);
-
-	while(true)
-	{
-		currentPosition = (leftStartPos - chas.getLeftPos()) + (rightStartPos - chas.getRightPos()) / 2;
-		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
-		double speed = drivePID.calculate(0, currentPosition, targetEnc, false, 0);
-		if(localTime % 50 == 0) {con.print(1,0,"error: %.1f", currentPosition);}
-
-		double autoStraight = autoStraightPID.calculate(0, inert.get_heading(), initialRotation, false, 0);
-
-		//speed = slewMult * ((abs(speed) > 127 * maxspeed) ? (targetEnc > 0 ? 127 * maxspeed : -127 * maxspeed) : speed);
-
-		chas.spinLeft(speed * maxspeed );
-		chas.spinRight(speed * maxspeed );
-
-
-		if(abs(targetEnc - (currentPosition - initialPosition)) < errorRange)
-		{
-			if(!withinRange)
-			{
-				withinRangeTime = localTime;
-				withinRange = true;
-			}
-			//else if(localTime >= withinRangeTime + 500) { pass; }
-		}
-
-		else { withinRange = false; }
-		
-		if(slewMult < 1) {slewMult += 0.05;}
-		delay(5);
-		localTime += 5;
-	}
-
-	chas.changeBrake(chas.HOLD);
-	chas.stop();
-	//globalRotation += inert.get_heading() - initialRotation;
+	goalsPossessed = 0;
+	drive(400, 1800, 1, 10);
+	drive(111,230, 1);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200,-127);
+	goalsPossessed = -0.3;
+	delay(300);
+	drive(-215,1300);
+	backLift.move_absolute(-2230,-127);
+	rotateTo(-95,2000);
+	drive(50, 500);
+	drive(-88,1000, 0.4);
+	delay(250);
+	drive(150,1000);
+	delay(250);
+	rotate(18.5, 1000);
+	backLift.move_absolute(-3000,-127);
+	delay(250);
+	drive(-250,1500);
+	backLift.move_absolute(-2000,127);
+	delay(250);
+	rotate(-55, 1000);
+	drive(200, 1000);
 }
-
-double rotateStartI;
-void rotateNew(double degrees, int timeout = 60000, double maxspeed = 1, bool autoSet = true)
+void redElevatedShort()
 {
-	if(maxspeed > 1) {maxspeed /= 100;}
-	int localTime = 0;
-
-	if(degrees < 0) {inert.set_heading(350);}
-	else if(degrees > 0) {inert.set_heading(10);}
-    else {return;}
-
-	double targetRotation = inert.get_heading() + degrees;
-	double initialRotation = inert.get_heading();
-
-	if(autoSet) { turnPID.modify((1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees))) * (1 + goalsPossessed/2)); }
-
-	double currentRotation;
-	int withinRangeTime;
-	bool withinRange = false;
-
-	if(autoSet) { rotateStartI = goalsPossessed + (1 + goalsPossessed/4); }
-
-<<<<<<< HEAD
-
-	while(timeout > localTime)
-	{
-		double lastRotation = currentRotation;
-		currentRotation = inert.get_heading();
-		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
-		bool integral = abs(initialRotation - currentRotation) <= rotateStartI;
-		double speed = turnPID.calculate(initialRotation, currentRotation, targetRotation, integral, lastRotation - currentRotation);
-
-
-		if(abs(currentRotation - targetRotation) <= 0.5)
-		{
-			if(!withinRange)
-		 	{
-				withinRangeTime = localTime;
-				withinRange = true;
-			}
-			else if(localTime >= withinRangeTime + 300) { break; }
-		}
-		else { withinRange = false; }
-
-		chas.spinLeft(speed * maxspeed);
-		chas.spinRight(-speed * maxspeed);
-
-		localTime += 5;
-		delay(5);
-=======
->>>>>>> parent of 47d2a50 (october 18)
-
-	while(timeout > localTime)
-	{
-		double lastRotation = currentRotation;
-		currentRotation = inert.get_heading();
-		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
-		bool integral = abs(initialRotation - currentRotation) <= rotateStartI;
-		double speed = turnPID.calculate(initialRotation, currentRotation, targetRotation, integral, lastRotation - currentRotation);
-
-
-		if(abs(currentRotation - targetRotation) <= 0.5)
-		{
-			if(!withinRange)
-		 	{
-				withinRangeTime = localTime;
-				withinRange = true;
-			}
-			else if(localTime >= withinRangeTime + 300) { break; }
-		}
-		else { withinRange = false; }
-
-		chas.spinLeft(speed * maxspeed);
-		chas.spinRight(-speed * maxspeed);
-
-<<<<<<< HEAD
-	}
+	
+	drive(150);
+	drive(20,500);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200, -127);
+	drive(-150);
 }
-
-
-=======
-		localTime += 5;
-		delay(5);
-
-
-	}
-}
-
-
->>>>>>> parent of 47d2a50 (october 18)
-void rotateSpecial(double degrees, int timeout = 60000, double maxspeed = 1)
+void redDeElevatedLong()
 {
-	double tempP = turnPID.getkP();
-	double tempI = turnPID.getkI();
-	double tempD = turnPID.getkD();
-
-	//need to tune
-	turnPID.modify(1,1,1);
-	rotateNew(degrees, timeout, maxspeed, false);
-	turnPID.modify(tempP, tempI, tempD);
+	drive(415, 1800, 1, 10);
+	drive(200,200);
+	frontPneu.toggle();
+	goalsPossessed = -0.3;
+	drive(-100, 500, 1, 10);
+	frontLift.move_absolute(-200,-127);
+	drive(-305,1500);
+	backLift.move_absolute(-1800, -127);
+	rotateTo(-86,2000);
+	drive(-30,800);
+	backLift.move_absolute(-2442, -127);
+	delay(1000);
+	drive(120, 1200);
 }
+void redDeElevatedShort()
+{
+	drive(130);
+	drive(25, 350);
+	frontPneu.toggle();
+	delay(200);
+	frontPneu.toggle();
+	drive(-150);
+}
+void redBoth() // 10/11
+{
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
+	drive(175, 2000);
+	rotateTo(-179, 1400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
+	delay(400);
+	drive(-90, 1300, 0.4);
+	drive(100, 1000);
+	backLift.move_absolute(-2750, -127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
+	delay(300);
+	drive(210);
+}
+void blueElevatedLong()
+{
+	goalsPossessed = 0;
+	drive(400, 1800, 1, 10);
+	drive(111,230, 1);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200,-127);
+	goalsPossessed = -0.3;
+	delay(300);
+	drive(-215,1300);
+	backLift.move_absolute(-2230,-127);
+	rotateTo(-95,2000);
+	drive(50, 500);
+	drive(-88,1000, 0.4);
+	delay(250);
+	drive(150,1000);
+	delay(250);
+	rotate(18.5, 1000);
+	backLift.move_absolute(-3000,-127);
+	delay(250);
+	drive(-250,1500);
+	backLift.move_absolute(-2000,127);
+	delay(250);
+	rotate(-55, 1000);
+	drive(200, 1000);
+}
+void blueElevatedShort()
+{
+	
+	drive(150);
+	drive(20,500);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200, -127);
+	drive(-150);
+}
+void blueDeElevatedLong()
+{
+	drive(415, 1800, 1, 10);
+	drive(200,200);
+	frontPneu.toggle();
+	goalsPossessed = -0.3;
+	drive(-100, 500, 1, 10);
+	frontLift.move_absolute(-200,-127);
+	drive(-305,1500);
+	backLift.move_absolute(-1800, -127);
+	rotateTo(-86,2000);
+	drive(-30,800);
+	backLift.move_absolute(-2442, -127);
+	delay(1000);
+	drive(120, 1200);
+}
+void blueDeElevatedShort()
+{
+	drive(130);
+	drive(25, 350);
+	frontPneu.toggle();
+	delay(200);
+	frontPneu.toggle();
+	drive(-150);
+}
+void blueBoth()
+{
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
+	drive(175, 2000);
+	rotateTo(-179, 1400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
+	delay(400);
+	drive(-90, 1300, 0.4);
+	drive(100, 1000);
+	backLift.move_absolute(-2750, -127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
+	delay(300);
+	drive(210);
+}
+void skillsFuture()
+{
+	backLift.move_absolute(-2450, -127);
+	delay(1500);
+	drive(-130, 2000);
+	backLift.move_absolute(0, 127); 
+	goalsPossessed++;
+	delay(1500); // first alliance goal should be obtained by here
+	drive(130, 2000);
+	rotateTo(-90);
+	drive(140, 2000);
+	rotateTo(-179);
+	drive(-700, 4000, 0.73); // drive far towards 2nd alliance goal
+	backLift.move_absolute(-2450, -127);
+	drive(-150, 2000, 0.5);
+	backLift.move_absolute(-1000, 126);
+	delay(750); // 2nd alliance goal should be obtained by here
+	goalsPossessed++;
+	drive(800), 1500;
+	rotateTo(-270, 1500);
+	drive(400, 1500);
+	drive(150, 1500);
+	frontPneu.toggle(); // 3rd alliance goal should be obtained here
+	goalsPossessed++;
+	frontLift.move_absolute(-2000, -127);
+	drive(400, 2000);
+	rotate(90);
+	
+}
+void skills()
+{
+	
+	drive(-220);
+	rotateTo(90);
+	backLift.move_absolute(-3000, -127);
+	delay(1500);
+	drive(-120);
+	backLift.move_absolute(-1000, 127);
+	goalsPossessed++;
+	delay(500);
+	drive(140);
+	rotateTo(0, 3000);
+	backLift.move_absolute(-800, 127);
+	delay(800);
+	backLift.move_absolute(300, 127);
+	delay(1500);
+	backLift.move_absolute(-3000, -127);
+	delay(1500);
+	drive(-250, 3000, 0.35);
+	backLift.move_absolute(-1500, 127);
+	//goalsPossessed++;
+	delay(1000);
+	backLift.move(20);
+	drive(-150);
+	rotateTo(26, 3000);
+	drive(-300);
+	rotateTo(180, 4000, 0.75);
+	drive(120);
+	rotateTo(105);
+	drive(120, 1200);
+	//frontPneu.toggle();
+	rotateTo(91, 1200);
+	goalsPossessed = 3;
+	park();
+}
+void neutralRush()
+{
+	chas.spinTo(2100,127);
+	frontPneu.toggle();
+	frontLift.move_absolute(-600, -127);
+	delay(200);
+	drive(-400);
+	rotate(-140,4000,0.4);
+}
+*/
 
 
 
 // driver control functions ====================================================
-
 
 enum arcadeTypes {MANUAL, AUTO};
 void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
@@ -758,7 +782,6 @@ void liftControl()
 
 		if(con.get_digital(E_CONTROLLER_DIGITAL_L1)) {front = false;}
 		else {front = true;}
-
 		// Move lift up
 		if(con.get_digital(E_CONTROLLER_DIGITAL_R1))
 		{
@@ -769,8 +792,18 @@ void liftControl()
 			}
 			else
 			{
-				backLift.move(127);
 				frontLift.move(0);
+				/*
+				if(backLift.get_position() <= 5)
+				{
+					backLift.move(0);
+				}
+				else
+				{
+					backLift.move(127);
+				}
+				*/
+				backLift.move(127);
 			}
 			firstTime = true;
 			changeVelocity = true;
@@ -952,11 +985,6 @@ void printInfo()
 //rotate(degrees, timeout)
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> parent of 47d2a50 (october 18)
 void redElevatedLong() // final b4 comp for all reds
 {
 	goalsPossessed = 0;
@@ -1207,10 +1235,6 @@ void neutralRush()
 	drive(-400);
 	rotate(-140,4000,0.4);
 }
-<<<<<<< HEAD
->>>>>>> parent of 47d2a50 (october 18)
-=======
->>>>>>> parent of 47d2a50 (october 18)
 
 //autonomous(will be called by competition)
 void autonomous()
@@ -1221,18 +1245,12 @@ void autonomous()
 	de-elevated = side with platform not elevated
 	both = starts from de-elevated side but utilizes both side, most likely use in quals
 	rush: rushes the neutral goal, will win 99% of the time, no win point, most likely use in elims
-
 	long = gets at least 2 goals
 	short = only gets one win point from alliance mobile goal
 	*/
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> parent of 47d2a50 (october 18)
+	midRight.move(127);
 
->>>>>>> parent of 47d2a50 (october 18)
 	while(!killAuton)
 	{
 
