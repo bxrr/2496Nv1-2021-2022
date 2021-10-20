@@ -464,6 +464,7 @@ void rotateNew(double degrees, int timeout = 60000, double maxspeed = 1, bool au
 
 	if(autoSet) { rotateStartI = goalsPossessed + (1 + goalsPossessed/4); }
 
+<<<<<<< HEAD
 
 	while(timeout > localTime)
 	{
@@ -490,12 +491,47 @@ void rotateNew(double degrees, int timeout = 60000, double maxspeed = 1, bool au
 
 		localTime += 5;
 		delay(5);
+=======
+>>>>>>> parent of 47d2a50 (october 18)
+
+	while(timeout > localTime)
+	{
+		double lastRotation = currentRotation;
+		currentRotation = inert.get_heading();
+		//calculate(double initialPosition, double currentPosition, double target, bool countIntegral, double positionDifference)
+		bool integral = abs(initialRotation - currentRotation) <= rotateStartI;
+		double speed = turnPID.calculate(initialRotation, currentRotation, targetRotation, integral, lastRotation - currentRotation);
+
+
+		if(abs(currentRotation - targetRotation) <= 0.5)
+		{
+			if(!withinRange)
+		 	{
+				withinRangeTime = localTime;
+				withinRange = true;
+			}
+			else if(localTime >= withinRangeTime + 300) { break; }
+		}
+		else { withinRange = false; }
+
+		chas.spinLeft(speed * maxspeed);
+		chas.spinRight(-speed * maxspeed);
+
+<<<<<<< HEAD
+	}
+}
+
+
+=======
+		localTime += 5;
+		delay(5);
 
 
 	}
 }
 
 
+>>>>>>> parent of 47d2a50 (october 18)
 void rotateSpecial(double degrees, int timeout = 60000, double maxspeed = 1)
 {
 	double tempP = turnPID.getkP();
@@ -917,7 +953,10 @@ void printInfo()
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 47d2a50 (october 18)
 void redElevatedLong() // final b4 comp for all reds
 {
 	goalsPossessed = 0;
@@ -1168,6 +1207,9 @@ void neutralRush()
 	drive(-400);
 	rotate(-140,4000,0.4);
 }
+<<<<<<< HEAD
+>>>>>>> parent of 47d2a50 (october 18)
+=======
 >>>>>>> parent of 47d2a50 (october 18)
 
 //autonomous(will be called by competition)
@@ -1185,7 +1227,10 @@ void autonomous()
 	*/
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 47d2a50 (october 18)
 
 >>>>>>> parent of 47d2a50 (october 18)
 	while(!killAuton)
