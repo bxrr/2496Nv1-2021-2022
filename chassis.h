@@ -1,26 +1,37 @@
 #include "main.h"
 #include "ports.h"
+<<<<<<< HEAD
 #include "globals.h"
 
 
 PID drivePID(0.5,0.01,7);
 PID autoStraightPID(2,0,0);
 PID turnPID(1,1,1);
+=======
+>>>>>>> parent of 47d2a50 (october 18)
 
 class Chassis
 {
-private:  
+private:
+    pros::Motor backLeft;
+    pros::Motor midLeft;
+    pros::Motor frontLeft;
+    pros::Motor backRight;
+    pros::Motor midRight;
+    pros::Motor frontRight;
     bool reverse;
     bool reverseButton;
 
 public:
-    
-    
-    Chassis() : 
+    Chassis() : backLeft(BACK_LEFT_PORT, pros::E_MOTOR_GEARSET_06, false),
+    midLeft(MID_LEFT_PORT, pros::E_MOTOR_GEARSET_06, false),
+    frontLeft(FRONT_LEFT_PORT, pros::E_MOTOR_GEARSET_06, false),
+    backRight(BACK_RIGHT_PORT, pros::E_MOTOR_GEARSET_06, false),
+    midRight(MID_RIGHT_PORT, pros::E_MOTOR_GEARSET_06, false),
+    frontRight(FRONT_RIGHT_PORT, pros::E_MOTOR_GEARSET_06, false),
     reverse(false),
     reverseButton(true)
     {}
-    
 
     // Spin methods ======================================================
     enum unitType {PCT, VOLT};
@@ -132,7 +143,7 @@ public:
 
     double getVelocity()
     {
-      return (frontRight.get_actual_velocity() - frontLeft.get_actual_velocity() - midLeft.get_actual_velocity() + midRight.get_actual_velocity() - backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
+      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midLeft.get_actual_velocity() + midRight.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
     }
 
     // Chassis reverse control ===================================================
@@ -169,16 +180,6 @@ public:
     }
 
 
-    void reset()
-    {
-      frontLeft.tare_position();
-      frontRight.tare_position();
-      midLeft.tare_position();
-      midRight.tare_position();
-      backLeft.tare_position();
-      backRight.tare_position();
-    }
-
     void spinTo(double enc, int speedRaw)
     {
         int speed = speedRaw > 0 ? enc >= 0 ? speedRaw : -speedRaw : speedRaw;
@@ -191,6 +192,7 @@ public:
         }
         stop();
     }
+<<<<<<< HEAD
 
 
 
@@ -303,4 +305,6 @@ public:
       reset();
     }
 
+=======
+>>>>>>> parent of 47d2a50 (october 18)
 };
