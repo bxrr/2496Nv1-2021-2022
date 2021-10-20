@@ -3,8 +3,8 @@
 #include "globals.h"
 
 
-PID drivePID(1.1,0.01,10);
-PID autoStraightPID(1,0,0);
+PID drivePID(0.5,0.01,7);
+PID autoStraightPID(2,0,0);
 PID turnPID(1,1,1);
 
 class Chassis
@@ -219,12 +219,13 @@ public:
 
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = (slewMult * drivePID.calculate(currentPosition, targetEnc, abs(targetEnc - currentPosition) < errorStartI)) * maxspeed;
+        if(abs(speed) > maxspeed * 127) {speed = speed > 0 ? maxspeed * 127 : -maxspeed * 127;}
         double autoStraight = autoStraightPID.calculate(inert.get_heading(), initialRotation, false);
         autoStraight = getVelocity() > 0 ? autoStraight : -autoStraight;
-        if(localTime % 50 == 0) {con.print(1,0,"error: %.6f", getVelocity());}
+        if(localTime % 50 == 0) {con.print(1,0,"error: %.6f", targetEnc - currentPosition);}
 
-        spinLeft(speed + (autoStraight * getVelocity() / (360 * maxspeed)));
-        spinRight(speed - (autoStraight * getVelocity() / (360 * maxspeed)));
+        spinLeft(speed + (autoStraight * (speed/127)));
+        spinRight(speed - (autoStraight * (speed/127)));
 
 
         if(abs(targetEnc - currentPosition) < errorRange)
@@ -239,7 +240,7 @@ public:
 
         else { withinRange = false; }
         
-        if(slewMult < 1) {slewMult += 0.05;}
+        if(slewMult < 1) {slewMult += 0.025;}
         delay(5);
         localTime += 5;
       }

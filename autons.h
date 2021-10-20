@@ -9,7 +9,7 @@ void rotateTo(double degrees, int timeout=100000, double speedM  = 1) { ch.rotat
 
 void redElevatedLong()
 {
-	drive(600, 1000000, .99999);
+	drive(600, 5000);
 }
 
 void redElevatedShort()
@@ -27,7 +27,7 @@ void redDeElevatedShort()
 void redBoth() // 10/11
 {
 }
-
+ß
 void blueElevatedLong()
 {
 }
