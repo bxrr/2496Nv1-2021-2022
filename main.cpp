@@ -593,7 +593,7 @@ void arcadeDrive(arcadeTypes arcadeType)			//fully manual arcade drive
 
 	}
 
-	else
+	else	//automatically make the robot drive straight
 	{
 		static int autoStraightVal;
 		static double inertialStart;					//starting inertial heading when driving straight
@@ -709,7 +709,7 @@ void autoBrakeMode()	//automatically sets brake mode
 					startTime = globalTime;
 					getStartTime = false;
 				}
-				if (globalTime - startTime > 2000)
+				if (globalTime - startTime > 1000)
 				{
 					chas.changeBrake(chas.COAST);
 					chas.stop();

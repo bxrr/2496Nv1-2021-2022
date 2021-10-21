@@ -3,9 +3,9 @@
 #include "globals.h"
 
 
-PID drivePID(1.1,0.01,10);
+PID drivePID(0.32, 0.007, 2.6); //tuned at all goals possessed
 PID autoStraightPID(1,0,0);
-PID turnPID(1,1,1);
+PID turnPID(2.9,0.1,0);
 
 class Chassis
 {
@@ -177,6 +177,8 @@ public:
       midRight.tare_position();
       backLeft.tare_position();
       backRight.tare_position();
+      drivePID.resetI();
+      turnPID.resetI();
     }
 
     void spinTo(double enc, int speedRaw)
@@ -195,7 +197,7 @@ public:
 
 
     //pid functions
-    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 3) // timeout in milliseconds
+    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 4) 
     {
       reset();
       if(maxspeed > 1) {maxspeed /= 100;}
@@ -209,6 +211,7 @@ public:
       inert.set_heading(180);
       double initialRotation = inert.get_heading();
       double errorStartI = 10;
+      bool countInt = false;
 
 
       while(localTime < timeout)
@@ -217,14 +220,17 @@ public:
         //currentPosition = (getLeftPos() - getRightPos()) / 2;
         currentPosition = (getRightPos() - getLeftPos()) / 2;
 
+        if(abs(targetEnc - currentPosition) < errorStartI) {countInt = true;}
+
         //calculate(double currentPosition, double target, bool countIntegral)
-        double speed = (slewMult * drivePID.calculate(currentPosition, targetEnc, abs(targetEnc - currentPosition) < errorStartI)) * maxspeed;
+        double speed = (slewMult * drivePID.calculate(currentPosition, targetEnc, countInt)) * maxspeed;
+        if(abs(speed) >  maxspeed * 127) {speed = speed > 0 ? maxspeed * 127 : -maxspeed * 127;}
         double autoStraight = autoStraightPID.calculate(inert.get_heading(), initialRotation, false);
         autoStraight = getVelocity() > 0 ? autoStraight : -autoStraight;
-        if(localTime % 50 == 0) {con.print(1,0,"error: %.6f", getVelocity());}
+        if(localTime % 50 == 0) {con.print(1,0,"error: %.2f", targetEnc - currentPosition);}
 
-        spinLeft(speed + (autoStraight * getVelocity() / (360 * maxspeed)));
-        spinRight(speed - (autoStraight * getVelocity() / (360 * maxspeed)));
+        spinLeft(speed + (autoStraight * speed/127));
+        spinRight(speed - (autoStraight * speed/127));
 
 
         if(abs(targetEnc - currentPosition) < errorRange)
@@ -234,12 +240,12 @@ public:
             withinRangeTime = localTime;
             withinRange = true;
           }
-          else if(localTime >= withinRangeTime + 250) { break; }
+          else if(localTime >= withinRangeTime + 200) { break; }
         }
 
         else { withinRange = false; }
         
-        if(slewMult < 1) {slewMult += 0.05;}
+        if(slewMult < 1) {slewMult += 0.025;}
         delay(5);
         localTime += 5;
       }
@@ -253,6 +259,7 @@ public:
 
     void rotate(double degrees, int timeout = 60000, double maxspeed = 1)
     {
+      reset();
       if(maxspeed > 1) {maxspeed /= 100;}
       int localTime = 0;
 
@@ -267,13 +274,15 @@ public:
       int withinRangeTime;
       bool withinRange = false;
       double rotateStartI = 1;
+      bool integral = false;
 
       while(timeout > localTime)
       {
         currentRotation = inert.get_heading();
-        bool integral = abs(initialRotation - currentRotation) <= rotateStartI;
+        if(abs(targetRotation - currentRotation) <= rotateStartI) { integral = true; }
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = turnPID.calculate(currentRotation - initialRotation, targetRotation, integral);
+        if(localTime % 50 == 0) {con.print(1,0,"error: %.2f", targetRotation - currentRotation);}
 
 
         if(abs(currentRotation - targetRotation) <= 0.5)
@@ -283,7 +292,7 @@ public:
             withinRangeTime = localTime;
             withinRange = true;
           }
-          else if(localTime >= withinRangeTime + 500) { break; }
+          else if(localTime >= withinRangeTime + 300) { break; }
         }
         else { withinRange = false; }
 
