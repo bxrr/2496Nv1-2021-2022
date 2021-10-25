@@ -9,18 +9,18 @@ PID turnPID(2.9,0.1,0);
 
 class Chassis
 {
-private:  
+private:
     bool reverse;
     bool reverseButton;
 
 public:
-    
-    
-    Chassis() : 
+
+
+    Chassis() :
     reverse(false),
     reverseButton(true)
     {}
-    
+
 
     // Spin methods ======================================================
     enum unitType {PCT, VOLT};
@@ -63,7 +63,7 @@ public:
     }
 
 
-    
+
 
     // Change brake type/stop ===================================================
     void stop()
@@ -158,7 +158,7 @@ public:
       return (backLeft.get_temperature() +
               midLeft.get_temperature() +
               frontLeft.get_temperature()) / 3;
-              
+
     }
 
     double rightTemp()
@@ -197,7 +197,7 @@ public:
 
 
     //pid functions
-    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 4) 
+    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 4)
     {
       reset();
       if(maxspeed > 1) {maxspeed /= 100;}
@@ -244,7 +244,7 @@ public:
         }
 
         else { withinRange = false; }
-        
+
         if(slewMult < 1) {slewMult += 0.025;}
         delay(5);
         localTime += 5;

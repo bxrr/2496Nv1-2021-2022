@@ -11,7 +11,7 @@ class PID
 
         double lastError;
         double I;
-    
+
     public:
 
         //constructor
@@ -33,7 +33,7 @@ class PID
     double getkI() {return kI;}
     double getkD() {return kD;}
     double getLast() {return lastError;}
-    
+
     void resetI() {I = 0;}
 
     //change value of object PID
@@ -54,7 +54,7 @@ class PID
         if(countIntegral) {I += error;}
         lastError = error;
         return (kP * error) + (kI * I) + (kD * D);
-        
+
     }
 
 };
