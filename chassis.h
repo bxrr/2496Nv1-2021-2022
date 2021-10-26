@@ -3,8 +3,8 @@
 #include "globals.h"
 
 
-PID drivePID(0.32, 0.007, 2.6); //tuned at all goals possessed
-PID autoStraightPID(1,0,0);
+PID drivePID(0.32, 0.01, 2.6); //tuned at all goals possessed
+PID autoStraightPID(1.5,0,0);
 PID turnPID(1.6,0.1,0);
 
 class Chassis
@@ -197,7 +197,7 @@ public:
 
 
     //pid functions
-    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 4)
+    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 5)
     {
       reset();
       if(maxspeed > 1) {maxspeed /= 100;}
@@ -245,7 +245,7 @@ public:
 
         else { withinRange = false; }
 
-        if(slewMult < 1) {slewMult += 0.025;}
+        if(slewMult < 1) {slewMult += 0.02;}
         delay(5);
         localTime += 5;
       }
@@ -305,7 +305,7 @@ public:
         }
 
 
-        if(abs(currentRotation - targetRotation) <= 0.3)
+        if(abs(currentRotation - targetRotation) <= 0.2)
         {
           if(!withinRange)
           {
@@ -330,6 +330,13 @@ public:
       turnPID.resetI();
       turnPID.setkI(ogKI);
       reset();
+      globalRotation += inert.get_heading() - initialRotation;
+    }
+
+
+    void rotateTo(double degrees, int timeout=100000, double speedM  = 1)
+    {
+      rotate(degrees - globalRotation, timeout, speedM);
     }
 
 };

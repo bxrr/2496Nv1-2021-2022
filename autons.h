@@ -3,33 +3,12 @@
 
 Chassis ch;
 
-void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 3)  { ch.drive(targetEnc, timeout, maxspeed, errorRange); }
-void rotate(double degrees, int timeout = 60000, double maxspeed = 1)  { ch.rotate(degrees, timeout, maxspeed); }
-void rotateTo(double degrees, int timeout=100000, double speedM  = 1) { ch.rotate(degrees - globalRotation, timeout, speedM); }
+void drive(double targetEnc, int timeout = 40000, double maxspeed = 1, double errorRange = 3)  { ch.drive(targetEnc, timeout, maxspeed, errorRange); }
+void rotate(double degrees, int timeout = 60000, double maxspeed = .9)  { ch.rotate(degrees, timeout, maxspeed); }
+void rotateTo(double degrees, int timeout = 100000, double speedM  = .9) { ch.rotate(degrees - globalRotation, timeout, speedM); }
 
 void redElevatedLong()
 {
-	drive(400, 1800, 1, 10);
-	drive(111,230, 1);
-	frontPneu.toggle();
-	frontLift.move_absolute(-200,-127);
-	delay(300);
-	drive(-215,1300);
-	backLift.move_absolute(-2230,-127);
-	rotateTo(-95,2000);
-	drive(50, 500);
-	drive(-88,1000, 0.4);
-	delay(250);
-	drive(150,1000);
-	delay(250);
-	rotate(18.5, 1000);
-	backLift.move_absolute(-3000,-127);
-	delay(250);
-	drive(-250,1500);
-	backLift.move_absolute(-2000,127);
-	delay(250);
-	rotate(-55, 1000);
-	drive(200, 1000);
 }
 
 void redElevatedShort()
@@ -78,14 +57,20 @@ void blueBoth()
 }
 
 
-void skillsFuture()
-{
-
-
-}
-
 void skills()
 {
+	frontPneu.toggle();
+	frontLift.move_absolute(-600, -127);
+	delay(1000);
+	frontLift.move(-30);
+	rotateTo(30);
+	drive(-200, 4000);
+	rotateTo(90);
+	drive(-310, 4000);
+	rotateTo(0);
+	frontLift.move_absolute(-3100, -127);
+	drive(1700,5000, 0.8);
+	
 
 }
 
