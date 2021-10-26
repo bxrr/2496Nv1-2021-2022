@@ -5,7 +5,7 @@
 
 PID drivePID(0.32, 0.007, 2.6); //tuned at all goals possessed
 PID autoStraightPID(1,0,0);
-PID turnPID(2.9,0.1,0);
+PID turnPID(1.6,0.1,0);
 
 class Chassis
 {
@@ -273,19 +273,39 @@ public:
       double currentRotation;
       int withinRangeTime;
       bool withinRange = false;
-      double rotateStartI = 1;
+      double rotateStartI = 1.5;
       bool integral = false;
+
+      double lastCheck = 1000000;
+      bool temp = false;
+
+      double ogKI = turnPID.getkI();
 
       while(timeout > localTime)
       {
         currentRotation = inert.get_heading();
         if(abs(targetRotation - currentRotation) <= rotateStartI) { integral = true; }
+        else if(localTime % 200 == 0 && localTime > 0)
+        {
+          if(abs(currentRotation - lastCheck) <= 0.001)
+          {
+            integral = true;
+            turnPID.setkI(0.025);
+            temp = true;
+          }
+          lastCheck = currentRotation;
+        }
+
         //calculate(double currentPosition, double target, bool countIntegral)
-        double speed = turnPID.calculate(currentRotation - initialRotation, targetRotation, integral);
-        if(localTime % 50 == 0) {con.print(1,0,"error: %.2f", targetRotation - currentRotation);}
+        double speed = turnPID.calculate(currentRotation, targetRotation, integral);
+        if(localTime % 50 == 0) 
+        {
+          if(temp) {con.print(1,0,"heheheha: %.2f", targetRotation - currentRotation);}
+          else {con.print(1,0,"error: %.2f", targetRotation - currentRotation);}
+        }
 
 
-        if(abs(currentRotation - targetRotation) <= 0.5)
+        if(abs(currentRotation - targetRotation) <= 0.3)
         {
           if(!withinRange)
           {
@@ -308,6 +328,7 @@ public:
       changeBrake(HOLD);
       stop();
       turnPID.resetI();
+      turnPID.setkI(ogKI);
       reset();
     }
 

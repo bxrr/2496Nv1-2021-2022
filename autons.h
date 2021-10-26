@@ -9,7 +9,27 @@ void rotateTo(double degrees, int timeout=100000, double speedM  = 1) { ch.rotat
 
 void redElevatedLong()
 {
-	rotate(90, 5000);
+	drive(400, 1800, 1, 10);
+	drive(111,230, 1);
+	frontPneu.toggle();
+	frontLift.move_absolute(-200,-127);
+	delay(300);
+	drive(-215,1300);
+	backLift.move_absolute(-2230,-127);
+	rotateTo(-95,2000);
+	drive(50, 500);
+	drive(-88,1000, 0.4);
+	delay(250);
+	drive(150,1000);
+	delay(250);
+	rotate(18.5, 1000);
+	backLift.move_absolute(-3000,-127);
+	delay(250);
+	drive(-250,1500);
+	backLift.move_absolute(-2000,127);
+	delay(250);
+	rotate(-55, 1000);
+	drive(200, 1000);
 }
 
 void redElevatedShort()

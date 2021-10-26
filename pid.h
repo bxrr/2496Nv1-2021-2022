@@ -33,6 +33,9 @@ class PID
     double getkI() {return kI;}
     double getkD() {return kD;}
     double getLast() {return lastError;}
+    double getCurI() {return I;}
+
+    void setkI(double n) {kI = n;}
 
     void resetI() {I = 0;}
 
