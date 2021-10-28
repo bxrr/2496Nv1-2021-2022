@@ -3,12 +3,65 @@
 
 Chassis ch;
 
-void drive(double targetEnc, int timeout = 40000, double maxspeed = 1, double errorRange = 3)  { ch.drive(targetEnc, timeout, maxspeed, errorRange); }
-void rotate(double degrees, int timeout = 60000, double maxspeed = .9)  { ch.rotate(degrees, timeout, maxspeed); }
-void rotateTo(double degrees, int timeout = 100000, double speedM  = .9) { ch.rotate(degrees - globalRotation, timeout, speedM); }
+double backGoals = 0;
+double frontGoals = 0;
+void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 3)  
+{ 
+	if(timeout == 4000) {timeout = abs(targetEnc)*4;}
+	ch.drive(targetEnc, timeout, maxspeed, errorRange); 
+}
+void rotate(double degrees, int timeout = 3000, double maxspeed = .9)  { ch.rotate(degrees, timeout, maxspeed); }
+void rotateTo(double degrees, int timeout = 3000, double speedM  = .9) { ch.rotate(degrees - globalRotation, timeout, speedM); }
 
 void redElevatedLong()
 {
+	//actually skills lol
+	drive(400);
+	rotateTo(-90);
+	backLift.move_absolute(-3000, -127);
+	delay(2000);
+	drive(-300, 1500);
+	backLift.move_absolute(-1200, 127);
+	backGoals = 1;
+	delay(1000);
+	drive(300);
+	rotateTo(0);
+	drive(400);
+	frontPneu.toggle();
+	delay(100);
+	frontLift.move_absolute(-750, -127);
+	frontGoals = 1;
+	drive(150);
+	rotateTo(30);
+	drive(710);
+	rotateTo(0);
+	drive(300);
+	frontLift.move_absolute(10, 127);
+	delay(200);
+	frontPneu.toggle();
+	frontGoals = 0;
+	delay(1000);
+	drive(-250, 2000);
+	rotateTo(-45);
+	drive(450);
+	frontPneu.toggle();
+	delay(200);
+	frontLift.move_absolute(-750, -127);
+	delay(800);
+	drive(-460);
+	rotateTo(-90);
+	drive(200);
+	backLift.move_absolute(-3050, 127);
+	delay(2000);
+	backGoals = 0;
+	backLift.move_absolute(0, 127);
+	drive(1300);
+	rotateTo(90);
+	backLift.move_absolute(-3000, -127);
+	drive(-250);
+	backGoals = 1;
+	delay(500);
+	rotateTo(0);
 }
 
 void redElevatedShort()
@@ -59,17 +112,6 @@ void blueBoth()
 
 void skills()
 {
-	frontPneu.toggle();
-	frontLift.move_absolute(-600, -127);
-	delay(1000);
-	frontLift.move(-30);
-	rotateTo(30);
-	drive(-200, 4000);
-	rotateTo(90);
-	drive(-310, 4000);
-	rotateTo(0);
-	frontLift.move_absolute(-3100, -127);
-	drive(1700,5000, 0.8);
 	
 
 }

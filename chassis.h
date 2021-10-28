@@ -1,11 +1,15 @@
 #include "main.h"
 #include "ports.h"
 #include "globals.h"
+#include <math.h>
 
 
 PID drivePID(0.32, 0.01, 2.6); //tuned at all goals possessed
 PID autoStraightPID(1.5,0,0);
-PID turnPID(1.6,0.1,0);
+PID turnPID(1.6,0.085,2);
+//to try:
+//PID turnPID(1.6,0.1,2);
+//float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees)))
 
 class Chassis
 {
@@ -197,6 +201,50 @@ public:
 
 
     //pid functions
+    void turnPIDadjuster()
+    {
+      if(frontGoals == 0)
+      {
+        if(backGoals == 0) 
+        {
+          turnPID.modify(1.6, 0.085, 2);
+        }
+
+        if(backGoals == 1)
+        {
+          turnPID.modify(1.72, 0.085, 2.2);
+        }
+
+        if(backGoals == 2)
+        {
+          turnPID.modify(1.66, 0.085, 2.2);
+        }
+        
+      }
+
+      if(frontGoals == 1)
+      {
+        if(backGoals == 0) 
+        {
+          //need to fix smaller degree turns
+          turnPID.modify(1.25, 0.065, 2);
+        }
+
+        if(backGoals == 1)
+        {
+          turnPID.modify(1.4, 0.085, 2);
+        }
+
+        if(backGoals == 2)
+        {
+          turnPID.modify(1.4, 0.085, 2);
+        }
+      }
+    }
+
+
+
+
     void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 5)
     {
       reset();
@@ -278,6 +326,12 @@ public:
 
       double lastCheck = 1000000;
       bool temp = false;
+      turnPIDadjuster();
+      //set kP between 1.5 and 2 depending on degree of rotation
+      double tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 0.6));
+      if(frontGoals == 1) 
+        tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 1.12));
+      turnPID.modify(tempAdj > 4 ? 4 : tempAdj < turnPID.getkP() - 0.1 ? turnPID.getkP() - 0.1 : tempAdj);
 
       double ogKI = turnPID.getkI();
 
@@ -300,12 +354,12 @@ public:
         double speed = turnPID.calculate(currentRotation, targetRotation, integral);
         if(localTime % 50 == 0) 
         {
-          if(temp) {con.print(1,0,"heheheha: %.2f", targetRotation - currentRotation);}
-          else {con.print(1,0,"error: %.2f", targetRotation - currentRotation);}
+          if(temp) {con.print(1,0,"heheheha: %.2f", (currentRotation - targetRotation));}
+          else {con.print(1,0,"error: %.2f", speed);}
         }
 
 
-        if(abs(currentRotation - targetRotation) <= 0.2)
+        if(abs(currentRotation - targetRotation) <= 0.45)
         {
           if(!withinRange)
           {
