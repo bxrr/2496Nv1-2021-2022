@@ -6,7 +6,7 @@
 
 PID drivePID(0.32, 0.01, 2.6); //tuned at all goals possessed
 PID autoStraightPID(1.5,0,0);
-PID turnPID(1.6,0.085,2);
+PID turnPID(1.6,/*0.085*/ 0,2);
 //to try:
 //PID turnPID(1.6,0.1,2);
 //float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees)))
@@ -185,8 +185,9 @@ public:
       turnPID.resetI();
     }
 
-    void spinTo(double enc, int speedRaw)
+    void spinTo(double enc, int speedRaw, bool absolute = true)
     {
+      if(!absolute) {reset();}
         int speed = speedRaw > 0 ? enc >= 0 ? speedRaw : -speedRaw : speedRaw;
         double startPos = frontLeft.get_position();
         changeBrake(COAST);
@@ -273,6 +274,7 @@ public:
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = (slewMult * drivePID.calculate(currentPosition, targetEnc, countInt)) * maxspeed;
         if(abs(speed) >  maxspeed * 127) {speed = speed > 0 ? maxspeed * 127 : -maxspeed * 127;}
+        if(abs(speed) < 10) {speed = speed > 0 ? 10 : -10;}
         double autoStraight = autoStraightPID.calculate(inert.get_heading(), initialRotation, false);
         autoStraight = getVelocity() > 0 ? autoStraight : -autoStraight;
         if(localTime % 50 == 0) {con.print(1,0,"error: %.2f", targetEnc - currentPosition);}
@@ -339,6 +341,7 @@ public:
       {
         currentRotation = inert.get_heading();
         if(abs(targetRotation - currentRotation) <= rotateStartI) { integral = true; }
+        /*
         else if(localTime % 200 == 0 && localTime > 0)
         {
           if(abs(currentRotation - lastCheck) <= 0.001)
@@ -349,17 +352,18 @@ public:
           }
           lastCheck = currentRotation;
         }
+        */
 
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = turnPID.calculate(currentRotation, targetRotation, integral);
+        if(abs(speed) < 10 + 0.8*(backGoals  + frontGoals)) {speed = speed > 0 ? 10 + 0.8*(backGoals  + frontGoals) : -10 - 0.8*(backGoals  + frontGoals);}
         if(localTime % 50 == 0) 
         {
-          if(temp) {con.print(1,0,"heheheha: %.2f", (currentRotation - targetRotation));}
-          else {con.print(1,0,"error: %.2f", speed);}
+          con.print(1,0,"Error: %.2f      ", (currentRotation - targetRotation));
         }
 
 
-        if(abs(currentRotation - targetRotation) <= 0.45)
+        if(abs(currentRotation - targetRotation) <= 0.5)
         {
           if(!withinRange)
           {
@@ -392,5 +396,76 @@ public:
     {
       rotate(degrees - globalRotation, timeout, speedM);
     }
+
+
+
+
+
+    void park(bool pistonUsed = false)
+    {
+      bool doOnce = true;
+      if(frontGoals + backGoals < 4) doOnce = false;
+      bool parking = false;
+      int localTime = 0;
+      double parkingThreshold = 21.6;
+      int parkStartTime = 0;
+      while(true)
+      {
+        if(localTime % 50 == 0) 
+        {
+          if(parking) con.print(0,0, "P Inert: %.2f        ", inert.get_pitch());
+          else con.print(0,0, "Inert: %.2f           ", inert.get_pitch());
+        }
+        //prevent the back lift from falling down if holding mobile goal
+        backLift.move(30);
+
+        //prevent the front lift from inhibiting the park, if being used
+        if(abs(inert.get_pitch()) > 1 && pistonUsed) {frontLift.move(-30);}
+
+        if(abs(inert.get_pitch() > parkingThreshold + 0.1))		//move from step 1 to 2
+        {
+          if(!parking) parkStartTime = localTime;
+          parking = true;
+        }
+
+        if(abs(inert.get_pitch()) < 15 && !parking)		//step 1(initialize)
+        {
+          spinLeft(127);
+          spinRight(127);
+        }
+        /*
+        else if(abs(inert.get_pitch()) < 20 && parking) //step 4, baktrack to prevent falling over
+        {
+          if(doOnce) { spinTo(-300, -127, false); doOnce = false; }
+          stop();
+          changeBrake(HOLD);
+          backLift.move(0);
+          frontLift.move(0);
+        }
+        */
+
+        else if(abs(inert.get_pitch()) < parkingThreshold && parking && localTime - parkStartTime > 500)	//step 3(finalize park)
+        {
+          if(doOnce) { spinTo(-1000, -80, false); doOnce = false; }
+          stop();
+          changeBrake(HOLD);
+          backLift.move(0);
+          frontLift.move(0);
+        }
+
+        else
+        {
+          //step 2(moving up the platform)
+          changeBrake(S_HOLD, inert.get_pitch(), 4.7 + 0.3 *(frontGoals + backGoals));
+        }
+        localTime++;
+        delay(5);
+
+      }
+    }
+
+
+
+
 
 };

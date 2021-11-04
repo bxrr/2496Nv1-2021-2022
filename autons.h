@@ -10,11 +10,12 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double err
 	if(timeout == 4000) {timeout = abs(targetEnc)*4;}
 	ch.drive(targetEnc, timeout, maxspeed, errorRange);
 }
-void rotate(double degrees, int timeout = 3000, double maxspeed = .9)  { ch.rotate(degrees, timeout, maxspeed); }
-void rotateTo(double degrees, int timeout = 3000, double speedM  = .9) { ch.rotate(degrees - globalRotation, timeout, speedM); }
+void rotate(double degrees, int timeout = 5000, double maxspeed = .9)  { ch.rotate(degrees, timeout, maxspeed); }
+void rotateTo(double degrees, int timeout = 5000, double speedM  = .9) { ch.rotate(degrees - globalRotation, timeout, speedM); }
 
 void redElevatedLong()
 {
+	/*
 	//actually skills lol
 	drive(400);
 	rotateTo(-90);
@@ -22,7 +23,9 @@ void redElevatedLong()
 	delay(2000);
 	drive(-300, 1500);
 	backLift.move_absolute(-1200, 127);
+
 	backGoals = 1;
+
 	delay(1000);
 	drive(300);
 	rotateTo(0);
@@ -30,7 +33,9 @@ void redElevatedLong()
 	frontPneu.toggle();
 	delay(100);
 	frontLift.move_absolute(-750, -127);
+
 	frontGoals = 1;
+
 	drive(150);
 	rotateTo(30);
 	drive(710);
@@ -39,45 +44,73 @@ void redElevatedLong()
 	frontLift.move_absolute(10, 127);
 	delay(200);
 	frontPneu.toggle();
+
 	frontGoals = 0;
+
 	delay(1000);
 	drive(-250, 2000);
-	rotateTo(-45);
+	rotateTo(-47);
 	drive(475);
 	frontPneu.toggle();
 	delay(200);
 	frontLift.move_absolute(-750, -127);
+
 	frontGoals = 1;
+
 	delay(800);
 	drive(-495);
 	rotateTo(-90);
 	drive(200);
+	frontLift.move(-20);
 	backLift.move_absolute(-3050, 127);
 	delay(2000);
+
 	backGoals = 0;
-	rotateTo(-90, 8000);
+
+	drive(150);
+	rotateTo(-92);
 	backLift.move_absolute(0, 127);
-	drive(1100);
+	drive(1000);
 	rotateTo(90);
 	backLift.move_absolute(-3000, -127);
 	rotateTo(90);
 	delay(1000);
-	drive(-375);
+	drive(-550);
+
 	backGoals = 1;
+
 	backLift.move_absolute(0, 127);
 	delay(500);
+	rotateTo(90);
 	drive(250);
 	rotateTo(0);
+	backLift.move_absolute(300, 127);
+	delay(1000);
 	backLift.move_absolute(-3000, -127);
 	delay(1000);
-	drive(-100);
-	drive(-400, 5000, 0.8);
+	drive(-500, 7000, 0.4);
 	backLift.move_absolute(-1200, 127);
+	*/
+	frontGoals = 1;
 	backGoals = 2;
-	drive(-300);
-	rotateTo(30);
-	drive(-400);
-	rotateTo(-45);
+
+	delay(500);
+	rotateTo(20);
+	backLift.move(35);
+	frontLift.move(-20);
+	drive(-1100);
+	rotateTo(100);
+	frontLift.move_absolute(-4000, -127);
+	delay(3000);
+	drive(400);
+	frontLift.move_absolute(-2000, 127);
+	delay(2000);
+
+	frontGoals = 2;
+	backGoals = 2;
+
+	rotateTo(85, 1000);
+	ch.park(true);
 }
 
 void redElevatedShort()

@@ -285,43 +285,7 @@ void autoBrakeMode()	//automatically sets brake mode
 }
 
 
-void park(bool pistonUsed = false)
-{
-	bool parking = false;
-	while(true)
-	{
-		//prevent the back lift from falling down if holding mobile goal
-		backLift.move(25);
 
-		//prevent the front lift from inhibiting the park, if being used
-		if(abs(inert.get_pitch()) > 1 && pistonUsed) {frontLift.move(-30);}
-
-		if(abs(inert.get_pitch() > 21))		//move from step 1 to 2
-		{
-			parking = true;
-		}
-
-		if(abs(inert.get_pitch()) < 15 && !parking)		//step 1(initialize)
-		{
-			chas.spinLeft(127);
-			chas.spinRight(127);
-		}
-
-		else if(abs(inert.get_pitch()) < 21 && parking)	//step 3(finalize park)
-		{
-			chas.stop();
-			chas.changeBrake(chas.HOLD);
-			backLift.move(0);
-			frontLift.move(0);
-		}
-
-		else
-		{
-			//step 2(moving up the platform)
-			chas.changeBrake(chas.S_HOLD, inert.get_pitch(), 4.7 + 0.3 * goalsPossessed);
-		}
-	}
-}
 
 
 // lifts
