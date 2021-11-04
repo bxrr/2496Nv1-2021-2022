@@ -201,7 +201,16 @@ public:
 
 
 
-    //pid functions
+
+
+
+
+
+
+
+
+
+    //pid/autonomous functions
     void turnPIDadjuster()
     {
       if(frontGoals == 0)
@@ -399,8 +408,6 @@ public:
 
 
 
-
-
     void park(bool pistonUsed = false)
     {
       bool doOnce = true;
@@ -456,7 +463,7 @@ public:
         else
         {
           //step 2(moving up the platform)
-          changeBrake(S_HOLD, inert.get_pitch(), 4.7 + 0.3 *(frontGoals + backGoals));
+          changeBrake(S_HOLD, inert.get_pitch(), 4.6 + 0.3 *(frontGoals + backGoals));
         }
         localTime++;
         delay(5);
