@@ -88,7 +88,7 @@ void redElevatedLong()
 	delay(1000);
 	backLift.move_absolute(-3000, -127);
 	delay(1000);
-	drive(-500, 7000, 0.4);
+	drive(-500, 7000, 0.4); ,
 	backLift.move_absolute(-1200, 127);
 	*/
 	frontGoals = 1;
@@ -99,23 +99,25 @@ void redElevatedLong()
 	backLift.move(35);
 	frontLift.move(-20);
 	drive(-1100);
-	rotateTo(100);
+	rotateTo(110);
 	frontLift.move_absolute(-4000, -127);
 	delay(3000);
-	drive(400);
+	drive(250);
+	rotateTo(115);
+	drive(150);
 	frontLift.move_absolute(-2000, 127);
 	delay(2000);
 
 	frontGoals = 2;
 	backGoals = 2;
 
-	rotateTo(85, 1000);
+	rotateTo(107, 1000);
 	ch.park(true);
 }
 
 void redElevatedShort()
 {
-
+	ch.park(true);
 }
 
 void redDeElevatedLong()

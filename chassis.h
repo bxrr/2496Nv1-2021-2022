@@ -215,7 +215,7 @@ public:
     {
       if(frontGoals == 0)
       {
-        if(backGoals == 0) 
+        if(backGoals == 0)
         {
           turnPID.modify(1.6, 0.085, 2);
         }
@@ -229,12 +229,12 @@ public:
         {
           turnPID.modify(1.66, 0.085, 2.2);
         }
-        
+
       }
 
       if(frontGoals == 1)
       {
-        if(backGoals == 0) 
+        if(backGoals == 0)
         {
           //need to fix smaller degree turns
           turnPID.modify(1.25, 0.065, 2);
@@ -340,7 +340,7 @@ public:
       turnPIDadjuster();
       //set kP between 1.5 and 2 depending on degree of rotation
       double tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 0.6));
-      if(frontGoals == 1) 
+      if(frontGoals == 1)
         tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 1.12));
       turnPID.modify(tempAdj > 4 ? 4 : tempAdj < turnPID.getkP() - 0.1 ? turnPID.getkP() - 0.1 : tempAdj);
 
@@ -366,7 +366,7 @@ public:
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = turnPID.calculate(currentRotation, targetRotation, integral);
         if(abs(speed) < 10 + 0.8*(backGoals  + frontGoals)) {speed = speed > 0 ? 10 + 0.8*(backGoals  + frontGoals) : -10 - 0.8*(backGoals  + frontGoals);}
-        if(localTime % 50 == 0) 
+        if(localTime % 50 == 0)
         {
           con.print(1,0,"Error: %.2f      ", (currentRotation - targetRotation));
         }
@@ -418,7 +418,7 @@ public:
       int parkStartTime = 0;
       while(true)
       {
-        if(localTime % 50 == 0) 
+        if(localTime % 50 == 0)
         {
           if(parking) con.print(0,0, "P Inert: %.2f        ", inert.get_pitch());
           else con.print(0,0, "Inert: %.2f           ", inert.get_pitch());
@@ -453,7 +453,7 @@ public:
 
         else if(abs(inert.get_pitch()) < parkingThreshold && parking && localTime - parkStartTime > 500)	//step 3(finalize park)
         {
-          if(doOnce) { spinTo(-1000, -80, false); doOnce = false; }
+          if(doOnce) { spinTo(-1400, -80, false); doOnce = false; }
           stop();
           changeBrake(HOLD);
           backLift.move(0);
