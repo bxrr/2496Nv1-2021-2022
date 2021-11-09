@@ -401,11 +401,6 @@ public:
     }
 
 
-    void rotateTo(double degrees, int timeout=100000, double speedM  = 1)
-    {
-      rotate(degrees - globalRotation, timeout, speedM);
-    }
-
 
 
     void park(bool pistonUsed = false)
@@ -452,7 +447,7 @@ public:
         }
 
 
-        else if(pitch < maxPitch - 0.5 && parking && localTime - parkStartTime > 500)	//step 3(finalize park)
+        else if(pitch < 21.5 && parking && localTime - parkStartTime > 500)	//step 3(finalize park)
         {
           if(doOnce) { spinTo(-1400, -80, false); doOnce = false; }
           stop();

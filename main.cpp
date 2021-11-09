@@ -597,6 +597,7 @@ void opcontrol()
 	chas.changeBrake(chas.COAST);
 	backLift.set_brake_mode(E_MOTOR_BRAKE_HOLD);
 
+	backPneu.toggle();
 	while (true)
 	{
 
