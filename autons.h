@@ -17,7 +17,7 @@ void redElevatedLong()
 {
 	
 	//actually skills lol
-	drive(400);
+	drive(410);
 	rotateTo(-90);
 	backLift.move_absolute(-3000, -127);
 	delay(2000);
@@ -49,7 +49,7 @@ void redElevatedLong()
 
 	delay(1000);
 	drive(-250, 2000);
-	rotateTo(-47);
+	rotateTo(-46);
 	drive(475);
 	frontPneu.toggle();
 	delay(200);
@@ -57,33 +57,33 @@ void redElevatedLong()
 
 	frontGoals = 1;
 
-	delay(800);
-	drive(-480);
+	delay(650);
+	drive(-435);
 	rotateTo(-90);
 	drive(200);
-	frontLift.move(-25);
+	frontLift.move_absolute(-1200, -127);
 	backLift.move_absolute(-3050, 127);
 	delay(2000);
 
 	backGoals = 0;
 
-	drive(150);
-	rotateTo(-90);
-	backLift.move_absolute(0, 127);
-	drive(1000);
-	rotateTo(83);
+	drive(170);
+	backLift.move_absolute(30, 127);
+	delay(500);
+	rotateTo(90);
+	drive(-1000, 2000, 0.7);
+	rotateTo(90);
 	backLift.move_absolute(-3000, -127);
 	delay(2000);
 	drive(-550); 
 
 	backGoals = 1;
 
-	backLift.move_absolute(0, 127);
+	backLift.move_absolute(100, 127);
 	delay(500);
 	rotateTo(90);
 	drive(250);
 	rotateTo(0);
-	backLift.move_absolute(300, 127);
 	delay(1000);
 	backLift.move_absolute(-3000, -127);
 	delay(1000);
@@ -107,11 +107,11 @@ void redElevatedLong()
 	drive(300, 3000);
 	*/
 	delay(500);
-	rotateTo(30);
+	rotateTo(35);
 	drive(-300);
 	rotateTo(180);
 	frontLift.move_absolute(-4200, -127);
-	drive(1000, 4000, 0.8);
+	drive(1070, 4000, 0.8);
 	drive(-100, 1000);
 	rotateTo(90);
 	drive(300);
@@ -123,7 +123,7 @@ void redElevatedLong()
 	frontGoals = 2;
 	backGoals = 2;
 
-	rotateTo(90, 1000);
+	rotateTo(87, 1000);
 	ch.park(true);
 }
 

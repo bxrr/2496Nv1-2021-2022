@@ -255,10 +255,10 @@ public:
 
 
 
-    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 5)
+    void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 7)
     {
       reset();
-      if(maxspeed > 1) {maxspeed /= 100;}
+      if(maxspeed > 5) {maxspeed /= 100;}
       int localTime = 0;
       double currentPosition = 0;
       double slewMult = 0;
@@ -319,7 +319,7 @@ public:
     void rotate(double degrees, int timeout = 60000, double maxspeed = 1)
     {
       reset();
-      if(maxspeed > 1) {maxspeed /= 100;}
+      if(maxspeed > 10) {maxspeed /= 100;}
       int localTime = 0;
 
       if(degrees < 0) {inert.set_heading(350);}
@@ -345,6 +345,7 @@ public:
       turnPID.modify(tempAdj > 4 ? 4 : tempAdj < turnPID.getkP() - 0.1 ? turnPID.getkP() - 0.1 : tempAdj);
 
       double ogKI = turnPID.getkI();
+      double minspeed = (abs(degrees) > 30) ? 10 : 12;
 
       while(timeout > localTime)
       {
@@ -365,14 +366,14 @@ public:
 
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = turnPID.calculate(currentRotation, targetRotation, integral);
-        if(abs(speed) < 10 + 0.8*(backGoals  + frontGoals)) {speed = speed > 0 ? 10 + 0.8*(backGoals  + frontGoals) : -10 - 0.8*(backGoals  + frontGoals);}
+        if(abs(speed) < 10 + 0.8*(backGoals  + frontGoals)) {speed = speed > 0 ? minspeed + 0.8*(backGoals  + frontGoals) : -minspeed - 0.8*(backGoals  + frontGoals);}
         if(localTime % 50 == 0)
         {
           con.print(1,0,"Error: %.2f      ", (currentRotation - targetRotation));
         }
 
 
-        if(abs(currentRotation - targetRotation) <= 0.5)
+        if(abs(currentRotation - targetRotation) <= 0.75)
         {
           if(!withinRange)
           {
@@ -409,17 +410,18 @@ public:
       //if(frontGoals + backGoals < 4) doOnce = false;
       bool parking = false;
       int localTime = 0;
-      int parkStartTime = 0;
+      double lastPitch = 0;
       double maxPitch = 0;
       double pitch = 0;
       while(true)
       {
         pitch = abs(inert.get_pitch());
+        double pitchVelocity = pitch - lastPitch;
         //prevent the back lift from falling down if holding mobile goal
         backLift.move(30);
 
         //prevent the front lift from inhibiting the park, if being used
-        if(pitch > 1 && pistonUsed) {frontLift.move(-30);}
+        if(pitch > 1 && pistonUsed) {frontLift.move(-25);}
 
 
         if(pitch > maxPitch) { maxPitch = pitch; }
@@ -430,13 +432,12 @@ public:
           if(parking) con.print(0,0, "P Inert: %.2f        ", pitch);
           else con.print(0,0, "Inert: %.2f           ", pitch);
           */
-          con.print(0,0, "Max Pitch: %.2f     ", maxPitch);
+          con.print(0,0, "Pitch V: %.2f     ", pitch - lastPitch);
         }
 
 
         if(pitch > 21)		//move from step 1 to 2
         {
-          if(!parking) parkStartTime = localTime;
           parking = true;
         }
 
@@ -447,9 +448,9 @@ public:
         }
 
 
-        else if(pitch < 21.5 && parking && localTime - parkStartTime > 500)	//step 3(finalize park)
+        else if(pitch < 21.5 && parking)	//step 3(finalize park)
         {
-          if(doOnce) { spinTo(-1400, -80, false); doOnce = false; }
+          if(doOnce) { spinTo(-2000, -80, false); doOnce = false; }
           stop();
           changeBrake(HOLD);
           backLift.move(0);
@@ -461,6 +462,8 @@ public:
           //step 2(moving up the platform)
           changeBrake(S_HOLD, pitch, 4.6 + 0.3 *(frontGoals + backGoals));
         }
+
+        if(localTime % 100 == 0) lastPitch = pitch;
         localTime += 5;
         delay(5);
 

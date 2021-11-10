@@ -465,7 +465,8 @@ void printInfo()
 			else {con.set_text(0,0, "Chas: REVERSE");}
 			*/
 
-			con.print(0,0,"inert: %.2f", inert.get_heading());
+			//con.print(0,0,"inert: %.2f", inert.get_heading());
+			con.print(0,0,"inert: %.2f", inert.get_pitch());
 		}
 		if(counter == 20)
 		{
