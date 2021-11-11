@@ -15,107 +15,97 @@ void rotateTo(double degrees, int timeout = 5000, double speedM  = .9) { ch.rota
 
 void redElevatedLong()
 {
-	
-	//actually skills lol
-	drive(410);
-	rotateTo(-90);
-	backLift.move_absolute(-3000, -127);
-	delay(2000);
-	drive(-300, 1500);
-	backLift.move_absolute(-1200, 127);
 
-	backGoals = 1;
-
-	delay(1000);
-	drive(300);
-	rotateTo(0);
-	drive(400);
-	frontPneu.toggle();
-	delay(100);
-	frontLift.move_absolute(-750, -127);
-
-	frontGoals = 1;
-
-	drive(150);
-	rotateTo(30);
-	drive(710);
-	rotateTo(0);
-	drive(300);
-	frontLift.move_absolute(10, 127);
-	delay(200);
-	frontPneu.toggle();
-
-	frontGoals = 0;
-
-	delay(1000);
-	drive(-250, 2000);
-	rotateTo(-46);
-	drive(475);
-	frontPneu.toggle();
-	delay(200);
-	frontLift.move_absolute(-750, -127);
-
-	frontGoals = 1;
-
-	delay(650);
-	drive(-435);
-	rotateTo(-90);
-	drive(200);
-	frontLift.move_absolute(-1200, -127);
-	backLift.move_absolute(-3050, 127);
-	delay(2000);
-
-	backGoals = 0;
-
-	drive(170);
-	backLift.move_absolute(30, 127);
-	delay(500);
-	rotateTo(90);
-	drive(-1000, 2000, 0.7);
-	rotateTo(90);
-	backLift.move_absolute(-3000, -127);
-	delay(2000);
-	drive(-550); 
-
-	backGoals = 1;
-
-	backLift.move_absolute(100, 127);
-	delay(500);
-	rotateTo(90);
-	drive(250);
-	rotateTo(0);
-	delay(1000);
-	backLift.move_absolute(-3000, -127);
-	delay(1000);
-	drive(-500, 2500, 0.4); 
+	// //actually skills lol
+	// drive(410);
+	// rotateTo(-90);
+	// backLift.move_absolute(-3000, -127);
+	// delay(2000);
+	// drive(-300, 1500);
+	// backLift.move_absolute(-1200, 127);
+	//
+	// backGoals = 1;
+	//
+	// delay(1000);
+	// drive(300);
+	// rotateTo(0);
+	// drive(400);
+	// frontPneu.toggle();
+	// delay(100);
+	// frontLift.move_absolute(-750, -127);
+	//
+	// frontGoals = 1;
+	//
+	// drive(150);
+	// rotateTo(30);
+	// drive(710);
+	// rotateTo(0);
+	// drive(300);
+	// frontLift.move_absolute(10, 127);
+	// delay(200);
+	// frontPneu.toggle();
+	//
+	// frontGoals = 0;
+	//
+	// delay(1000);
+	// drive(-250, 2000);
+	// rotateTo(-46);
+	// drive(475);
+	// frontPneu.toggle();
+	// delay(200);
+	// frontLift.move_absolute(-750, -127);
+	//
+	// frontGoals = 1;
+	//
+	// delay(650);
+	// drive(-435);
+	// rotateTo(-90);
+	// drive(200);
+	// frontLift.move_absolute(-1200, -127);
+	// backLift.move_absolute(-3050, 127);
+	// delay(2000);
+	//
+	// backGoals = 0;
+	//
+	// drive(170);
+	// backLift.move_absolute(30, 127);
+	// delay(500);
+	// rotateTo(90);
+	// drive(-1000, 2000, 0.7);
+	// rotateTo(90);
+	// backLift.move_absolute(-3000, -127);
+	// delay(2000);
+	// drive(-550);
+	//
+	// backGoals = 1;
+	//
+	// backLift.move_absolute(100, 127);
+	// delay(500);
+	// rotateTo(90);
+	// drive(250);
+	// rotateTo(0);
+	// delay(1000);
+	// backLift.move_absolute(-3000, -127);
+	// delay(1000);
+	// drive(-500, 2500, 0.4);
 	backLift.move_absolute(-1200, 127);
 
 	frontGoals = 1;
 	backGoals = 2;
 
-	
-	/*
-	rotateTo(18);
-	backLift.move(35);
-	frontLift.move(-20);
-	drive(-1150);
-	frontLift.move_absolute(-4000, -127);
-	delay(2000);
-	rotateTo(105, 3000);
-	drive(300, 3000);
-	rotateTo(100, 2500);
-	drive(300, 3000);
-	*/
 	delay(500);
 	rotateTo(35);
 	drive(-300);
 	rotateTo(180);
 	frontLift.move_absolute(-4200, -127);
-	drive(1070, 4000, 0.8);
+	drive(1040, 4000, 0.8);
 	drive(-100, 1000);
 	rotateTo(90);
+	backLift.move_absolute(-3020, -127);
+	delay(500);
 	drive(300);
-	
+	backLift.move_absolute(-300, 127);
+
 	frontLift.move_absolute(-2000, 127);
 	delay(2000);
 
@@ -134,7 +124,7 @@ void redElevatedShort()
 
 void redDeElevatedLong()
 {
-
+	ch.spinTo(2000, 115, false);
 }
 
 void redDeElevatedShort()

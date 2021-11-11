@@ -188,10 +188,10 @@ public:
     void spinTo(double enc, int speedRaw, bool absolute = true)
     {
       if(!absolute) {reset();}
-        int speed = speedRaw > 0 ? enc >= 0 ? speedRaw : -speedRaw : speedRaw;
-        double startPos = frontLeft.get_position();
+        int speed = speedRaw;
+        double startPos = midLeft.get_position();
         changeBrake(COAST);
-        while(abs(frontLeft.get_position() - startPos) < enc)
+        while(abs(midLeft.get_position() - startPos) < enc)
         {
           spinLeft(speed);
           spinRight(speed);
@@ -426,7 +426,7 @@ public:
 
         if(pitch > maxPitch) { maxPitch = pitch; }
 
-        if(localTime % 50 == 0) 
+        if(localTime % 50 == 0)
         {
           /*
           if(parking) con.print(0,0, "P Inert: %.2f        ", pitch);
@@ -448,9 +448,9 @@ public:
         }
 
 
-        else if(pitch < 21.5 && parking)	//step 3(finalize park)
+        else if(pitch < 21 && parking)	//step 3(finalize park)
         {
-          if(doOnce) { spinTo(-2000, -80, false); doOnce = false; }
+          // if(doOnce) { spinTo(-2000, -115, false); doOnce = false; }
           stop();
           changeBrake(HOLD);
           backLift.move(0);
