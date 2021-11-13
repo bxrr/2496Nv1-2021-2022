@@ -466,7 +466,7 @@ void printInfo()
 			*/
 
 			//con.print(0,0,"inert: %.2f", inert.get_heading());
-			con.print(0,0,"inert: %.2f", inert.get_pitch());
+			con.print(0,0,"inert: %.2f", inert.get_heading());
 		}
 		if(counter == 20)
 		{

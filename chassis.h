@@ -185,7 +185,7 @@ public:
       turnPID.resetI();
     }
 
-    void spinTo(double enc, int speed, int brakeType = 1)
+    void spinTo(double enc, int speed, int brakeType = 1, double timeout = 4000)
     {
       reset();
       int timer = 0;
@@ -197,6 +197,7 @@ public:
         if (timer % 50 == 0) con.print(0,0,"inert: %.2f", getRightPos());
         timer += 5;
         pros::delay(5);
+        if(timer >= timeout) break;
       }
       stop();
     }
@@ -448,7 +449,7 @@ public:
             changeBrake(HOLD);
             stop();
             delay(100);
-            spinTo(-37, -20, 2); 
+            spinTo(-45, -22, 2); 
             doOnce = false; 
           }
           backLift.move(0);
@@ -459,7 +460,7 @@ public:
         {
           //step 2(moving up the platform)
           doOnce = true;
-          changeBrake(S_HOLD, pitch, 5 + 0.3 *(frontGoals + backGoals));
+          changeBrake(S_HOLD, pitch, 5 + 0.5 *(frontGoals + backGoals));
         }
 
         if(localTime % 100 == 0) lastPitch = pitch;
