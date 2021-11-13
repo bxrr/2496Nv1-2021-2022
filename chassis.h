@@ -444,13 +444,13 @@ public:
 
         else if(pitch < 21 && parking)	//step 3(finalize park)
         {
-          if(doOnce) 
-          { 
+          if(doOnce)
+          {
             changeBrake(HOLD);
             stop();
             delay(100);
-            spinTo(-45, -22, 2); 
-            doOnce = false; 
+            spinTo(-45, -22, 2);
+            doOnce = false;
           }
           backLift.move(0);
           frontLift.move(0);

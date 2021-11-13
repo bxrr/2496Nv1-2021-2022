@@ -64,7 +64,7 @@ void redDeElevatedLong()
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
 	ch.spinTo(-800, -127);
-	ch.stop();																																																																																																																																																																																																																																																																																							
+	ch.stop();
 	rotate(-20);
 	ch.spinTo(-400, -50, 1, 1500);
 	drive(165, 2000);
@@ -77,7 +77,7 @@ void redDeElevatedLong()
 
 void redDeElevatedShort()
 {
-	
+
 }
 
 void redBoth()
@@ -127,9 +127,9 @@ void skills()
 	rotateTo(-90);
 	drive(-300, 1500);
 	backLift.move_absolute(-1200, 127);
-	
+
 	backGoals = 1;
-	
+
 	delay(500);
 	drive(300);
 	rotateTo(0);
@@ -137,9 +137,9 @@ void skills()
 	frontPneu.toggle();
 	delay(100);
 	frontLift.move_absolute(-750, -127);
-	
+
 	frontGoals = 1;
-	
+
 	drive(150);
 	rotateTo(30);
 	drive(710);
@@ -148,9 +148,9 @@ void skills()
 	frontLift.move_absolute(10, 127);
 	delay(200);
 	frontPneu.toggle();
-	
+
 	frontGoals = 0;
-	
+
 	delay(1000);
 	drive(-250, 2000);
 	rotateTo(-46);
@@ -158,9 +158,9 @@ void skills()
 	frontPneu.toggle();
 	delay(200);
 	frontLift.move_absolute(-750, -127);
-	
+
 	frontGoals = 1;
-	
+
 	delay(650);
 	drive(-435);
 	rotateTo(-90);
@@ -168,9 +168,9 @@ void skills()
 	drive(200);
 	frontLift.move_absolute(-1200, -127);
 	delay(300);
-	
+
 	backGoals = 0;
-	
+
 	drive(170);
 	backLift.move_absolute(30, 127);
 	//delay(500);
@@ -179,22 +179,22 @@ void skills()
 	drive(-1000, 2000, 0.7);
 	rotateTo(90, 500, 1.2);
 	drive(-550, 1000);
-	
+
 	backGoals = 1;
-	
+
 	backLift.move_absolute(100, 127);
 	delay(100);
 	rotateTo(90, 800, 1.2);
 	drive(250);
 	rotateTo(0);
 	backLift.move_absolute(-3000, -127);
-	delay(600);
-	drive(-500, 2000, 0.4);
+	delay(650);
+	drive(-525, 2000, 0.4);
 	backLift.move_absolute(-1200, 127);
 
 	frontGoals = 1;
 	backGoals = 2;
-	
+
 
 	delay(200);
 	rotateTo(35, 1000);
@@ -209,7 +209,7 @@ void skills()
 	frontGoals = 2;
 	backGoals = 2;
 
-	rotateTo(87, 500, 2);
+	rotateTo(88.5, 500, 2);
 	ch.park();
 }
 
