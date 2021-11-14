@@ -416,6 +416,7 @@ public:
       double lastPitch = 0;
       double maxPitch = 0;
       double pitch = 0;
+      int parkStartTime;
       while(true)
       {
         pitch = abs(inert.get_pitch());
@@ -432,7 +433,14 @@ public:
 
         if(pitch > 21)		//move from step 1 to 2
         {
+          if(!parking) parkStartTime = localTime;
           parking = true;
+          /*
+          if(localTime - parkStartTime >= 1000 && localTime - parkStartTime >= 1100)
+          {
+            maxPitch = pitch;
+          }
+          */
         }
 
         if(pitch < 15 && !parking)		//step 1(initialize)
@@ -442,14 +450,14 @@ public:
         }
 
 
-        else if(pitch < 21 && parking)	//step 3(finalize park)
+        else if(pitch < maxPitch - 4 && parking)	//step 3(finalize park)
         {
           if(doOnce)
           {
             changeBrake(HOLD);
             stop();
             delay(100);
-            spinTo(-45, -22, 2);
+            spinTo(-30, -35, 2);
             doOnce = false;
           }
           backLift.move(0);
@@ -460,10 +468,16 @@ public:
         {
           //step 2(moving up the platform)
           doOnce = true;
-          changeBrake(S_HOLD, pitch, 5 + 0.5 *(frontGoals + backGoals));
+          //changeBrake(S_HOLD, pitch, 6 + 0.7 *(frontGoals + backGoals));
+          spinLeft(120);
+          spinRight(120);
         }
 
-        if(localTime % 100 == 0) lastPitch = pitch;
+        if(localTime % 50 == 0) 
+        {
+          if(parking) con.print(0,0, "max: %.1f, %.1f", maxPitch, pitch);
+          lastPitch = pitch;
+        }
         localTime += 5;
         delay(5);
 

@@ -49,7 +49,7 @@ void autonSelector()
 	if(localTime ==100)
 	{
 		if (autonType == 1){con.set_text(1,0, "Elevated Long        ");}
-		else if (autonType == 2){con.set_text(1,0, "Elevated Short       ");}
+		else if (autonType == 2){con.set_text(1,0, "Neutral + Tree       ");}
 		else if (autonType == 3){con.set_text(1,0, "De-elevated Long      ");}
 		else if (autonType == 4){con.set_text(1,0, "De-elevated short     ");}
 		else if (autonType == 5) {con.set_text(1,0, "Both               ");}

@@ -41,6 +41,92 @@ void redElevatedShort()
 	frontPneu.toggle();
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
+	drive(-655, 2500, 1, 80);
+	frontPneu.toggle();
+	drive(-250);
+	rotateTo(-39, 1200);
+	frontLift.move_absolute(0, -127);
+	drive(1000, 2000, 1, 50);
+	frontPneu.toggle();
+	frontGoals = 1;
+	frontLift.move_absolute(-800, -127);
+	drive(-1000);
+	backLift.move_absolute(-3000, -127);
+	rotateTo(-135, 1400);
+	drive(-400, 1500);
+	backLift.move_absolute(-1000, 127);
+	delay(200);
+	drive(200);
+
+
+
+}
+
+void redDeElevatedLong()
+{
+	ch.spinTo(760,127);
+	frontPneu.toggle();
+	frontGoals = 1;
+	frontLift.move_absolute(-800, -127);
+	ch.spinTo(-800, -127);
+	ch.stop();
+	rotateTo(-20);
+	ch.spinTo(-400, -50, 1, 1500);
+	drive(165, 2000);
+	/*
+	rotate(-80, 1500);
+	backLift.move_absolute(-2400, -127);
+	drive(-100, 1500);
+	delay(500);
+	drive(300);
+	*/
+	rotateTo(-81, 2000);
+	backLift.move_absolute(-3000, -127);
+	drive(150, 1500);
+	drive(-500, 1500);
+	backLift.move_absolute(-1000, 127);
+	delay(500);
+
+}
+
+void redDeElevatedShort()
+{
+
+}
+
+void redBoth()
+{
+	ch.park();
+}
+
+void blueElevatedLong()
+{
+	ch.spinTo(700,127);
+	frontPneu.toggle();
+	frontGoals = 1;
+	frontLift.move_absolute(-800, -127);
+	ch.spinTo(-700, -127);
+	ch.spinTo(-500, -50, 1, 1500);
+	drive(450, 2000);
+	rotateTo(-90);
+	backLift.move_absolute(-2400, -100);
+	drive(-100, 2000);
+	delay(500);
+	drive(300);
+	backLift.move_absolute(0, 127);
+	rotateTo(-80, 900);
+	drive(-500, 1200);
+	backPneu.toggle();
+	delay(200);
+	drive(400);
+}
+
+void blueElevatedShort()
+{
+	ch.spinTo(700,127);
+	frontPneu.toggle();
+	frontGoals = 1;
+	frontLift.move_absolute(-800, -127);
 	drive(-725);
 	rotateTo(50, 1500);
 	frontPneu.toggle();
@@ -52,12 +138,9 @@ void redElevatedShort()
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
 	drive(-800);
-
-
-
 }
 
-void redDeElevatedLong()
+void blueDeElevatedLong()
 {
 	ch.spinTo(760,127);
 	frontPneu.toggle();
@@ -73,31 +156,6 @@ void redDeElevatedLong()
 	drive(-85, 1500);
 	delay(500);
 	drive(300);
-}
-
-void redDeElevatedShort()
-{
-
-}
-
-void redBoth()
-{
-
-}
-
-void blueElevatedLong()
-{
-
-}
-
-void blueElevatedShort()
-{
-
-}
-
-void blueDeElevatedLong()
-{
-
 }
 
 void blueDeElevatedShort()
@@ -186,7 +244,7 @@ void skills()
 	delay(100);
 	rotateTo(90, 800, 1.2);
 	drive(250);
-	rotateTo(0);
+	rotateTo(0, 2000);
 	backLift.move_absolute(-3000, -127);
 	delay(650);
 	drive(-525, 2000, 0.4);
@@ -201,9 +259,9 @@ void skills()
 	drive(-300, 1500);
 	rotateTo(180, 2000);
 	frontLift.move_absolute(-4200, -127);
-	drive(1070, 3100, 0.8);
+	drive(1130, 3100, 0.8);
 	drive(-100, 800);
-	rotateTo(90,1500);
+	rotateTo(90,2000, 1.05);
 	drive(300, 1000);
 	frontLift.move_absolute(-2000, -127);
 	frontGoals = 2;
