@@ -608,6 +608,7 @@ void opcontrol()
 			chasDisabled = true;
 		}
 		arcadeDrive(MANUAL);
+		// tankDrive();
 		liftControl();
 		pneumaticControl();
 		reverseToggle();
