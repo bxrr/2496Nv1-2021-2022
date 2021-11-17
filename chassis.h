@@ -4,9 +4,10 @@
 #include <math.h>
 
 
-PID drivePID(0.32, 0.01, 2.6); //tuned at all goals possessed
-PID autoStraightPID(1.5,0,0);
-PID turnPID(1.6,/*0.085*/ 0,2);
+PID drivePID(0.25, 0.01, 0); //tuned at all goals possessed
+PID autoStraightPID(1.5, 0, 0);
+PID turnPID(1.5, 0.085, 0);
+PID curvePID(1.5, 0.08, 0);
 //to try:
 //PID turnPID(1.6,0.1,2);
 //float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees)))
@@ -28,9 +29,6 @@ public:
 
     // Spin methods ======================================================
     enum unitType {PCT, VOLT};
-
-
-
 
     void spinLeft(double speed, unitType unit=VOLT) // VOLT is -127 to 127, PCT is -100 to 100
     {
@@ -202,17 +200,6 @@ public:
       stop();
     }
 
-
-
-
-
-
-
-
-
-
-
-
     //pid/autonomous functions
     void turnPIDadjuster()
     {
@@ -232,7 +219,6 @@ public:
         {
           turnPID.modify(1.66, 0.085, 2.2);
         }
-
       }
 
       if(frontGoals == 1)
@@ -240,7 +226,7 @@ public:
         if(backGoals == 0)
         {
           //need to fix smaller degree turns
-          turnPID.modify(1.25, 0.065, 2);
+          turnPID.modify(1.3, 0.095, 2);
         }
 
         if(backGoals == 1)
@@ -256,8 +242,6 @@ public:
     }
 
 
-
-
     void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double errorRange = 7)
     {
       reset();
@@ -271,7 +255,7 @@ public:
 
       inert.set_heading(180);
       double initialRotation = inert.get_heading();
-      double errorStartI = 10;
+      double errorStartI = 30;
       bool countInt = false;
 
 
@@ -286,7 +270,6 @@ public:
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = (slewMult * drivePID.calculate(currentPosition, targetEnc, countInt)) * maxspeed;
         if(abs(speed) >  maxspeed * 127) {speed = speed > 0 ? maxspeed * 127 : -maxspeed * 127;}
-        if(abs(speed) < 10) {speed = speed > 0 ? 10 : -10;}
         double autoStraight = autoStraightPID.calculate(inert.get_heading(), initialRotation, false);
         autoStraight = getVelocity() > 0 ? autoStraight : -autoStraight;
         if(localTime % 50 == 0) {con.print(1,0,"error: %.2f", targetEnc - currentPosition);}
@@ -308,8 +291,8 @@ public:
         else { withinRange = false; }
 
         if(slewMult < 1) {slewMult += 0.02;}
-        delay(5);
-        localTime += 5;
+        delay(10);
+        localTime += 10;
       }
 
       changeBrake(HOLD);
@@ -335,42 +318,27 @@ public:
       double currentRotation;
       int withinRangeTime;
       bool withinRange = false;
-      double rotateStartI = 1.5;
+      double rotateStartI = 8;
       bool integral = false;
 
       double lastCheck = 1000000;
       bool temp = false;
-      turnPIDadjuster();
+      // turnPIDadjuster();
       //set kP between 1.5 and 2 depending on degree of rotation
-      double tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 0.6));
-      if(frontGoals == 1)
-        tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 1.12));
-      turnPID.modify(tempAdj > 4 ? 4 : tempAdj < turnPID.getkP() - 0.1 ? turnPID.getkP() - 0.1 : tempAdj);
+      double kpAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 0.6));
+      // if(frontGoals == 1)
+      //   tempAdj = pow(turnPID.getkP(), pow(90/abs(degrees), 1.12));
+      turnPID.modify(kpAdj > 4 ? 4 : kpAdj < turnPID.getkP() - 0.1 ? turnPID.getkP() - 0.1 : kpAdj);
 
       double ogKI = turnPID.getkI();
-      double minspeed = (abs(degrees) > 30) ? 10 : 11;
 
       while(timeout > localTime)
       {
         currentRotation = inert.get_heading();
         if(abs(targetRotation - currentRotation) <= rotateStartI) { integral = true; }
-        /*
-        else if(localTime % 200 == 0 && localTime > 0)
-        {
-          if(abs(currentRotation - lastCheck) <= 0.001)
-          {
-            integral = true;
-            turnPID.setkI(0.025);
-            temp = true;
-          }
-          lastCheck = currentRotation;
-        }
-        */
 
         //calculate(double currentPosition, double target, bool countIntegral)
         double speed = turnPID.calculate(currentRotation, targetRotation, integral);
-        if(abs(speed) < 10 + 0.8*(backGoals  + frontGoals)) {speed = speed > 0 ? minspeed + 0.8*(backGoals  + frontGoals) : -minspeed - 0.8*(backGoals  + frontGoals);}
-        if(localTime % 50 == 0)
         {
           con.print(1,0,"Error: %.2f      ", (currentRotation - targetRotation));
         }
@@ -391,8 +359,8 @@ public:
         spinLeft(speed * maxspeed);
         spinRight(-speed * maxspeed);
 
-        localTime += 5;
-        delay(5);
+        localTime += 10;
+        delay(10);
 
 
       }
@@ -405,6 +373,61 @@ public:
     }
 
 
+    void curve(double degrees, bool clockwise=true, double amplifier=1, int timeout=5000)
+    {
+      if(degrees > 0) inert.set_heading(10);
+      else inert.set_heading(350);
+
+      double targetHeading = inert.get_heading() + degrees;
+      double curPos = inert.get_heading();
+
+      bool exitFirst = true;
+      double exitRange = 0.5; // degrees
+      double exitTimeout = 250; //ms
+      double exitStartTime;
+
+      int timer = 0;
+
+      while(true)
+      {
+        curPos = inert.get_heading();
+        double speed = curvePID.calculate(curPos, targetHeading);
+
+        if(clockwise)
+        {
+          spinLeft(speed);
+          spinRight(speed * 0.4 * amplifier);
+        }
+        else
+        {
+          spinLeft(speed * 0.4 * amplifier);
+          spinRight(speed);
+        }
+
+        if(timer >= timeout)
+        {
+          break;
+        }
+
+        if(abs(targetHeading-curPos) < exitRange)
+        {
+          if(exitFirst)
+          {
+            exitFirst = false;
+            exitStartTime = timer;
+          }
+          else if(exitStartTime + exitTimeout <= timer) break;
+        }
+        else
+        {
+          exitFirst = true;
+        }
+
+        delay(5);
+        timer += 5;
+      }
+      stop();
+    }
 
 
     void park(bool pistonUsed = false)
@@ -473,7 +496,7 @@ public:
           spinRight(120);
         }
 
-        if(localTime % 50 == 0) 
+        if(localTime % 50 == 0)
         {
           if(parking) con.print(0,0, "max: %.1f, %.1f", maxPitch, pitch);
           lastPitch = pitch;

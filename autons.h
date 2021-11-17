@@ -10,6 +10,7 @@ void drive(double targetEnc, int timeout = 4000, double maxspeed = 1, double err
 	if(timeout == 4000) {timeout = abs(targetEnc)*4;}
 	ch.drive(targetEnc, timeout, maxspeed, errorRange);
 }
+void curve(double degrees, bool clockwise=true, double amplifier=1, int timeout=5000) {ch.curve(degrees, clockwise, amplifier, timeout);}
 void rotate(double degrees, int timeout = 5000, double maxspeed = .9)  { ch.rotate(degrees, timeout, maxspeed); }
 void rotateTo(double degrees, int timeout = 5000, double speedM  = .9) { ch.rotate(degrees - globalRotation, timeout, speedM); }
 
@@ -91,7 +92,7 @@ void redDeElevatedLong()
 
 void redDeElevatedShort()
 {
-
+	curve(90);
 }
 
 void redBoth()
@@ -160,12 +161,18 @@ void blueDeElevatedLong()
 
 void blueDeElevatedShort()
 {
-
+	drive(200);
+	rotate(45);
+	drive(400);
+	rotate(90);
+	drive(100);
+	rotate(45);
+	drive(600);
 }
 
 void blueBoth()
 {
-
+	drive(500);
 }
 
 void neutralRush()

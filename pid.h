@@ -49,15 +49,12 @@ class PID
 
 
     //calculate speed to run chassis
-    double calculate(double currentPosition, double target, bool countIntegral)
+    double calculate(double currentPosition, double target, bool countIntegral=false)
     {
-
-		double error = target - currentPosition;
+        double error = target - currentPosition;
         double D = lastError - error;
         if(countIntegral) {I += error;}
         lastError = error;
         return (kP * error) + (kI * I) + (kD * D);
-
     }
-
 };
