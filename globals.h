@@ -23,6 +23,7 @@ extern IMU inert;
 extern double frontGoals;
 extern double backGoals;
 extern double globalRotation;
+extern double pi;
 
 extern PID turnPID;
 extern PID drivePID;

@@ -1,10 +1,13 @@
 #include "main.h"
 #include "autons.h"
+#include <math.h>
+#define _USE_MATH_DEFINES
 //autons has all includes through chains
 
 #include <string.h>
 
 using namespace pros;
+double pi = M_PI;
 
 
 // Globals

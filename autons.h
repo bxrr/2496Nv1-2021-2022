@@ -92,7 +92,7 @@ void redDeElevatedLong()
 
 void redDeElevatedShort()
 {
-	curve(90);
+	ch.curveNew(250, 250, 90);
 }
 
 void redBoth()

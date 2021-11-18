@@ -430,6 +430,53 @@ public:
     }
 
 
+
+    void curveNew(double x, double y, double degrees)
+    {
+      double xPos = 0.00001;
+      double yPos = 0.00001;
+      if(degrees > 0) inert.set_heading(10);
+      else inert.set_heading(350);
+      double targetHeading = inert.get_heading() + degrees;
+      double curHeading = 0;
+      double initialHeading = inert.get_heading();
+      int localTime = 0;
+      double actualSpeed = 0;
+
+      while(true)
+      {
+  
+
+        xPos += abs(actualSpeed * sin(curHeading * pi/180));
+        yPos += abs(actualSpeed * cos(curHeading * pi/180));
+        actualSpeed = (3600*getVelocity())/(60*1000);  //convert rpm to degrees per 10 ms
+        curHeading = inert.get_heading() - initialHeading;
+        double xError = abs(x - xPos);
+        double inertError = abs(targetHeading - curHeading + initialHeading);
+        double theoY = sqrt((y*y) - ((y*y) * pow(xPos - x, 2))/(x*x));
+        double yError = theoY - yPos;
+
+        double raw = xError/3 > 80 ? 80 : xError;
+
+        spinLeft(raw - yError*10);
+        spinRight(raw);
+        
+        if(inertError <= 1 && xError < 10)
+        {
+          stop();
+          break;
+        }
+
+         if(localTime % 50 == 0) con.print(0,0, "X: %.1f, Y: %.1f", yError, yPos);
+
+        localTime+= 10;
+        delay(10);
+      }
+
+    }
+
+
+
     void park(bool pistonUsed = false)
     {
       bool doOnce = true;
