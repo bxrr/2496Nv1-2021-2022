@@ -1,5 +1,6 @@
 #include "api.h"
 #include "okapi/api.hpp"
+#include "globals.h"
 #include <string>
 
 using namespace okapi;
@@ -30,8 +31,8 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 void generatePath(double x, double y, double deg, std::string name)
 {
     profileController->generatePath({
-    {0_ft, 0_ft, 0_deg},  // Profile starting position, this will normally be (0, 0, 0)
-    {1_ft * x, 1_ft * x, 1_deg * deg}}, // The next point in the profile, 3 feet forward
+    {0_ft, 0_ft, 0_deg},  // start position
+    {1_ft * x, 1_ft * y, 1_deg * deg}}, // profile target
     name // Profile name
 );
 }

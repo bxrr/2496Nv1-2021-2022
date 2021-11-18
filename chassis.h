@@ -1,10 +1,9 @@
 #include "main.h"
 #include "ports.h"
-#include "globals.h"
 #include "motionProfile.h"
 #include <math.h>
 
-using namespace okapi;
+
 
 
 void delay(int time, bool ms = true) { pros::delay(ms ? time : time/1000); }
@@ -42,14 +41,14 @@ public:
         if(unit == VOLT)
         {
             backLeft.move(speed);
-            midLeft.move(-speed);
-            frontLeft.move(-speed);
+            midLeft.move(speed);
+            frontLeft.move(speed);
         }
         else
         {
             backLeft.move(speed * 127 / 100);
-            midLeft.move(-speed * 127 / 100);
-            frontLeft.move(-speed * 127 / 100);
+            midLeft.move(speed * 127 / 100);
+            frontLeft.move(speed * 127 / 100);
         }
     }
 
@@ -58,13 +57,13 @@ public:
         speed = (reverse) ? (-speed) : (speed);
         if(unit == VOLT)
         {
-            backRight.move(-speed);
+            backRight.move(speed);
             midRight.move(speed);
             frontRight.move(speed);
         }
         else
         {
-            backRight.move(-speed * 127 / 100);
+            backRight.move(speed * 127 / 100);
             midRight.move(speed * 127 / 100);
             frontRight.move(speed * 127 / 100);
         }
@@ -140,7 +139,7 @@ public:
 
     double getVelocity()
     {
-      return (frontRight.get_actual_velocity() - frontLeft.get_actual_velocity() - midLeft.get_actual_velocity() + midRight.get_actual_velocity() - backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
+      return (frontRight.get_actual_velocity() + frontLeft.get_actual_velocity() + midLeft.get_actual_velocity() + midRight.get_actual_velocity() + backRight.get_actual_velocity() + backLeft.get_actual_velocity()) / 6 ;
     }
 
     // Chassis reverse control ===================================================
