@@ -32,7 +32,7 @@ void generatePath(double x, double y, double deg, std::string name)
 {
     profileController->generatePath({
     {0_ft, 0_ft, 0_deg},  // start position
-    {1_ft * x, 1_ft * y, 1_deg * deg}}, // profile target
+    {1_in * x, 1_in * y, 1_deg * deg}}, // profile target
     name // Profile name
 );
 }
