@@ -7,7 +7,7 @@
 PID drivePID(0.25, 0.01, 0); //tuned at all goals possessed
 PID autoStraightPID(1.5, 0, 0);
 PID turnPID(1.5, 0.085, 0);
-PID curvePID(1.5, 0.08, 0);
+PID curvePID(2, 0.12, 0);
 //to try:
 //PID turnPID(1.6,0.1,2);
 //float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees)))
@@ -261,7 +261,6 @@ public:
 
       while(localTime < timeout)
       {
-
         //currentPosition = (getLeftPos() - getRightPos()) / 2;
         currentPosition = (getRightPos() - getLeftPos()) / 2;
 
@@ -373,13 +372,14 @@ public:
     }
 
 
-    void curve(double degrees, bool clockwise=true, double amplifier=1, int timeout=5000)
+    void curve(double degrees, bool backward=false, double amplifier=1, int timeout=5000)
     {
       if(degrees > 0) inert.set_heading(10);
       else inert.set_heading(350);
 
       double targetHeading = inert.get_heading() + degrees;
       double curPos = inert.get_heading();
+      bool startI = false;
 
       bool exitFirst = true;
       double exitRange = 0.5; // degrees
@@ -390,20 +390,21 @@ public:
 
       while(true)
       {
+        // Update sensor variables
         curPos = inert.get_heading();
-        double speed = curvePID.calculate(curPos, targetHeading);
+        if(abs(targetHeading - curPos) < 6) startI = true;
+        
+        // Calculate speeds
+        double baseSpeed = abs(curvePID.calculate(curPos, targetHeading, startI));
+        double modifiedSpeed = baseSpeed * 0.4 * amplifier;
+        double leftSpeed = (degrees > 0) ? (baseSpeed) : (modifiedSpeed) * (backward) ? (-1) : 1;
+        double rightSpeed = (degrees > 0) ? (modifiedSpeed) : (baseSpeed) * (backward) ? (-1) : 1;
 
-        if(clockwise)
-        {
-          spinLeft(speed);
-          spinRight(speed * 0.4 * amplifier);
-        }
-        else
-        {
-          spinLeft(speed * 0.4 * amplifier);
-          spinRight(speed);
-        }
+        // apply speed
+        spinLeft(leftSpeed);
+        spinRight(rightSpeed);
 
+        // Check to exit loop
         if(timer >= timeout)
         {
           break;
@@ -423,6 +424,7 @@ public:
           exitFirst = true;
         }
 
+        // Timer
         delay(5);
         timer += 5;
       }
@@ -445,7 +447,7 @@ public:
 
       while(true)
       {
-  
+
 
         xPos += abs(actualSpeed * sin(curHeading * pi/180));
         yPos += abs(actualSpeed * cos(curHeading * pi/180));
@@ -460,7 +462,7 @@ public:
 
         spinLeft(raw - yError*10);
         spinRight(raw);
-        
+
         if(inertError <= 1 && xError < 10)
         {
           stop();
