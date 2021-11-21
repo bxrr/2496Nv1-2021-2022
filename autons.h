@@ -89,7 +89,8 @@ void redDeElevatedLong()
 
 void redDeElevatedShort()
 {
-	ch.curveNew(250, 250, 90);
+	generatePath(3,0,0, "A");
+	move("A");
 }
 
 void redBoth()
