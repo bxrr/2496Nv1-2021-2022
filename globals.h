@@ -1,5 +1,4 @@
 #include "pid.h"
-
 //define global variables here
 
 //motors, pneumatic objects
@@ -22,7 +21,6 @@ extern pros::IMU inert;
 extern double frontGoals;
 extern double backGoals;
 extern double globalRotation;
-extern double pi;
 
 extern PID turnPID;
 extern PID drivePID;
@@ -41,7 +39,14 @@ extern void redBoth();
 extern void blueBoth();
 extern void neutralRush();
 extern void skills();
-
+extern pros::Motor backLift;
+extern pros::Motor frontLift;
+extern pros::Motor backLeft;
+extern pros::Motor midLeft;
+extern pros::Motor frontLeft;
+extern pros::Motor backRight;
+extern pros::Motor midRight;
+extern pros::Motor frontRight;
 extern void delay();
 
 

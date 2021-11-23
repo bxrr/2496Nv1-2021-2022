@@ -2,7 +2,7 @@
 #include "ports.h"
 #include "motionProfile.h"
 #include <math.h>
-
+#define _USE_MATH_DEFINES
 
 
 
@@ -12,7 +12,7 @@ void delay(int time, bool ms = true) { pros::delay(ms ? time : time/1000); }
 PID drivePID(0.25, 0.01, 0); //tuned at all goals possessed
 PID autoStraightPID(1.5, 0, 0);
 PID turnPID(1.5, 0.085, 0);
-PID curvePID(2, 0.12, 0);
+PID curvePID(1.6, 0.01, 0);
 //to try:
 //PID turnPID(1.6,0.1,2);
 //float kP = (1.5*(90/degrees) > 2 ? (2) : (1.5*(90/degrees) < 1.5 ? (1.5) : 1.5*(90/degrees)))
@@ -27,7 +27,7 @@ public:
 
 
     Chassis() :
-    reverse(false),
+    reverse(false), 
     reverseButton(true)
     {}
 
@@ -377,14 +377,16 @@ public:
     }
 
 
-    void curve(double degrees, bool backward=false, double amplifier=1, int timeout=5000)
+    void curve(double degrees, bool forward=true, double amplifier=1, int timeout=5000)
     {
       if(degrees > 0) inert.set_heading(10);
       else inert.set_heading(350);
 
       double targetHeading = inert.get_heading() + degrees;
       double curPos = inert.get_heading();
+
       bool startI = false;
+      double startIval = 7;
 
       bool exitFirst = true;
       double exitRange = 0.5; // degrees
@@ -395,21 +397,23 @@ public:
 
       while(true)
       {
-        // Update sensor variables
+        if(targetHeading - curPos <= startIval) startI = true;
         curPos = inert.get_heading();
-        if(abs(targetHeading - curPos) < 6) startI = true;
-        
-        // Calculate speeds
-        double baseSpeed = abs(curvePID.calculate(curPos, targetHeading, startI));
-        double modifiedSpeed = baseSpeed * 0.4 * amplifier;
-        double leftSpeed = (degrees > 0) ? (baseSpeed) : (modifiedSpeed) * (backward) ? (-1) : 1;
-        double rightSpeed = (degrees > 0) ? (modifiedSpeed) : (baseSpeed) * (backward) ? (-1) : 1;
+        double speed = curvePID.calculate(curPos, targetHeading, startI);
+        if(targetHeading - curPos > 10 && speed < 40) {speed = 40;}
+        if(timer % 50 == 0) con.print(0, 0, "error: %f", targetHeading - curPos);
 
-        // apply speed
-        spinLeft(leftSpeed);
-        spinRight(rightSpeed);
+        if(degrees > 0)
+        {
+          spinLeft(speed * amplifier);
+          spinRight(speed * 0.4 * amplifier);
+        }
+        else
+        {
+          spinLeft(speed * 0.4 * amplifier);
+          spinRight(speed * amplifier);
+        }
 
-        // Check to exit loop
         if(timer >= timeout)
         {
           break;
@@ -429,7 +433,6 @@ public:
           exitFirst = true;
         }
 
-        // Timer
         delay(5);
         timer += 5;
       }
@@ -437,9 +440,10 @@ public:
     }
 
 
-
     void curveNew(double x, double y, double degrees)
     {
+      float kP = 0.4;
+
       double xPos = 0.00001;
       double yPos = 0.00001;
       if(degrees > 0) inert.set_heading(10);
@@ -452,21 +456,19 @@ public:
 
       while(true)
       {
-
-
         xPos += abs(actualSpeed * sin(curHeading * pi/180));
         yPos += abs(actualSpeed * cos(curHeading * pi/180));
         actualSpeed = (3600*getVelocity())/(60*1000);  //convert rpm to degrees per 10 ms
         curHeading = inert.get_heading() - initialHeading;
         double xError = abs(x - xPos);
         double inertError = abs(targetHeading - curHeading + initialHeading);
-        double theoY = sqrt((y*y) - ((y*y) * pow(xPos - x, 2))/(x*x));
-        double yError = theoY - yPos;
+        double yError = abs(y - yPos);
 
-        double raw = xError/3 > 80 ? 80 : xError;
+        double baseSpeed = yError * kP;
+        double speedDiff = sin((M_PI/x) * yError * 180 / pi);
 
-        spinLeft(raw - yError*10);
-        spinRight(raw);
+        spinLeft(baseSpeed);
+        spinRight(baseSpeed - baseSpeed * speedDiff);
 
         if(inertError <= 1 && xError < 10)
         {
@@ -474,9 +476,9 @@ public:
           break;
         }
 
-         if(localTime % 50 == 0) con.print(0,0, "X: %.1f, Y: %.1f", yError, yPos);
+        if(localTime % 50 == 0) con.print(0,0, "X: %.1f", speedDiff);
 
-        localTime+= 10;
+        localTime += 10;
         delay(10);
       }
 
