@@ -1,3 +1,5 @@
+using namespace pros;
+
 class PID
 {
     private:
@@ -47,12 +49,15 @@ class PID
 
 
     //calculate speed to run chassis
-    double calculate(double currentPosition, double target, bool countIntegral=false)
+    double calculate(double currentPosition, double target, bool countIntegral)
     {
-        double error = target - currentPosition;
+
+		double error = target - currentPosition;
         double D = lastError - error;
         if(countIntegral) {I += error;}
         lastError = error;
         return (kP * error) + (kI * I) + (kD * D);
+
     }
+
 };

@@ -1,20 +1,22 @@
 #include "pid.h"
+using namespace pros;
+
 //define global variables here
 
 //motors, pneumatic objects
-extern pros::Motor backLift;
-extern pros::Motor frontLift;
-extern pros::Motor backLeft;
-extern pros::Motor midLeft;
-extern pros::Motor frontLeft;
-extern pros::Motor backRight;
-extern pros::Motor midRight;
-extern pros::Motor frontRight;
+extern Motor backLift;
+extern Motor frontLift;
+extern Motor backLeft;
+extern Motor midLeft;
+extern Motor frontLeft;
+extern Motor backRight;
+extern Motor midRight;
+extern Motor frontRight;
 extern Piston frontPneu;
 extern Piston backPneu;
 extern Piston frontSpecialPneu;
-extern pros::Controller con;
-extern pros::IMU inert;
+extern Controller con;
+extern IMU inert;
 
 
 //global variables
@@ -39,17 +41,3 @@ extern void redBoth();
 extern void blueBoth();
 extern void neutralRush();
 extern void skills();
-extern pros::Motor backLift;
-extern pros::Motor frontLift;
-extern pros::Motor backLeft;
-extern pros::Motor midLeft;
-extern pros::Motor frontLeft;
-extern pros::Motor backRight;
-extern pros::Motor midRight;
-extern pros::Motor frontRight;
-extern void delay();
-
-
-//motionProfile
-extern void generatePath();
-extern void move();
