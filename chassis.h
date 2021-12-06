@@ -3,6 +3,7 @@
 #include "globals.h"
 #include <math.h>
 
+#define PI 3.14159265
 
 PID drivePID(0.32, 0.01, 2.6); //tuned at all goals possessed
 PID autoStraightPID(1.5,0,0);
@@ -204,15 +205,6 @@ public:
 
 
 
-
-
-
-
-
-
-
-
-
     //pid/autonomous functions
     void turnPIDadjuster()
     {
@@ -254,7 +246,6 @@ public:
         }
       }
     }
-
 
 
 
@@ -405,6 +396,29 @@ public:
     }
 
 
+    void curve(double tar_x, double tar_y, double degrees)
+    {
+      double start_pos = (chas.getLeftPos() + chas.getRightPos()) / 2;
+      double start_heading = inert.get_heading();
+      double x = 0;
+      double y = 0;
+
+      while(y < tar_y)
+      {
+        cur_pos = (chas.getLeftPos() + chas.getRightPos()) / 2;
+        x = (cur_pos - start_pos) * sin((inert.get_heading() - start_heading) / 180);
+        y = (cur_pos - start_pos) * cos((inert.get_heading() - start_heading) / 180);
+
+        double min_y = tar_y / pow(tar_y, 0.45);
+        double min_x = tar_x / pow(tar_x, 0.45);
+        double speed_y = (tar_y / pow(tar_y, 0.45)) * sin(PI/tar_y * (y));
+        double speed_x = (tar_x / pow(tar_x, 0.45)) * sin(PI/tar_x * (x));
+
+
+        chas.spinLeft(speed_y + min_y);
+        chas.spinRight(-speed_y + min_y);
+      }
+    }
 
 
     void park(bool pistonUsed = false)
