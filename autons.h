@@ -246,7 +246,7 @@ void skills()
 	drive(250);
 	rotateTo(0, 2000);
 	backLift.move_absolute(-3000, -127);
-	delay(650);
+	delay(1000);
 	drive(-525, 2000, 0.4);
 	backLift.move_absolute(-1200, 127);
 
