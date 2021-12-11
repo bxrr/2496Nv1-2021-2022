@@ -182,7 +182,7 @@ void skills()
 	//actually skills lol
 	backLift.move_absolute(-3000, -127);
 	drive(410);
-	rotateTo(-90);
+	rotateTo(-90, 1200);
 	drive(-300, 1500);
 	backLift.move_absolute(-1200, 127);
 
@@ -191,7 +191,7 @@ void skills()
 	delay(500);
 	drive(300);
 	rotateTo(0);
-	drive(400);
+	drive(400, 1550);
 	frontPneu.toggle();
 	delay(100);
 	frontLift.move_absolute(-750, -127);
@@ -212,7 +212,7 @@ void skills()
 	delay(1000);
 	drive(-250, 2000);
 	rotateTo(-46);
-	drive(475);
+	drive(475, 3000);
 	frontPneu.toggle();
 	delay(200);
 	frontLift.move_absolute(-750, -127);
@@ -240,10 +240,11 @@ void skills()
 
 	backGoals = 1;
 
-	backLift.move_absolute(100, 127);
-	delay(100);
+	backLift.move_absolute(-1800, 127);
+	delay(400);
 	rotateTo(90, 800, 1.2);
 	drive(250);
+	backLift.move_absolute(200, 127);
 	rotateTo(0, 2000);
 	backLift.move_absolute(-3000, -127);
 	delay(1000);
@@ -259,21 +260,19 @@ void skills()
 	drive(-300, 1500);
 	rotateTo(180, 2000);
 	frontLift.move_absolute(-4200, -127);
-	drive(1130, 3100, 0.8);
-	drive(-100, 800);
+	drive(1050, 3100, 0.8);
+	drive(-80, 800);
 	rotateTo(90,2000, 1.05);
 	drive(300, 1000);
 	frontLift.move_absolute(-2000, -127);
 	frontGoals = 2;
 	backGoals = 2;
 
-	rotateTo(88.5, 500, 2);
+	rotateTo(89.2, 1000, 2);
 	backLift.move_absolute(-3000, -127);
-	delay(200);
-	drive(150);
+	drive(-125, 1000);
+	drive(160, 1000);
 	backLift.move_absolute(0, 127);
-	delay(200);
-
 	ch.park();
 }
 
