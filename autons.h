@@ -160,7 +160,8 @@ void blueDeElevatedLong()
 
 void blueDeElevatedShort()
 {
-
+	ch.spinTo(80, 126);
+	ch.spinTo(-80, 127);
 }
 
 void blueBoth()

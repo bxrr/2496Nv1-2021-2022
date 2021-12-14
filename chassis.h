@@ -187,6 +187,7 @@ public:
 
     void spinTo(double enc, int speed, int brakeType = 1, double timeout = 4000)
     {
+      if(enc < 0) speed = -speed;
       reset();
       int timer = 0;
       changeBrake(brakeType == 1 ? COAST : HOLD);
@@ -201,7 +202,6 @@ public:
       }
       stop();
     }
-
 
 
 
@@ -407,80 +407,37 @@ public:
 
 
 
-    void park(bool pistonUsed = false)
+    void park()
     {
-      bool doOnce = true;
-      //if(frontGoals + backGoals < 4) doOnce = false;
       bool parking = false;
-      int localTime = 0;
-      double lastPitch = 0;
-      double maxPitch = 0;
-      double pitch = 0;
-      int parkStartTime;
       while(true)
       {
-        pitch = abs(inert.get_pitch());
-        double pitchVelocity = pitch - lastPitch;
-        //prevent the back lift from falling down if holding mobile goal
-        backLift.move(30);
+        backLift.move(25);
+        //f(abs(inert.get_pitch()) > 1) {frontLift.move(-30);}
 
-        //prevent the front lift from inhibiting the park, if being used
-        if(pitch > 1 && pistonUsed) {frontLift.move(-18);}
-
-
-        if(pitch > maxPitch) { maxPitch = pitch; }
-
-
-        if(pitch > 21)		//move from step 1 to 2
+        if(abs(inert.get_pitch() > 21))
         {
-          if(!parking) parkStartTime = localTime;
           parking = true;
-          /*
-          if(localTime - parkStartTime >= 1000 && localTime - parkStartTime >= 1100)
-          {
-            maxPitch = pitch;
-          }
-          */
         }
 
-        if(pitch < 15 && !parking)		//step 1(initialize)
+        if(abs(inert.get_pitch()) < 15 && !parking)
         {
           spinLeft(127);
           spinRight(127);
         }
 
-
-        else if(pitch < maxPitch - 4 && parking)	//step 3(finalize park)
+        else if(abs(inert.get_pitch()) < 21 && parking)
         {
-          if(doOnce)
-          {
-            changeBrake(HOLD);
-            stop();
-            delay(100);
-            spinTo(-60, -60, 2);
-            doOnce = false;
-          }
+          drive(-140, 2000, 1.6);
+          stop();
+          changeBrake(HOLD);
           backLift.move(0);
           frontLift.move(0);
+          while(true)
+          {
+            continue;
+          }
         }
-
-        else
-        {
-          //step 2(moving up the platform)
-          doOnce = true;
-          //changeBrake(S_HOLD, pitch, 6 + 0.7 *(frontGoals + backGoals));
-          spinLeft(120);
-          spinRight(120);
-        }
-
-        if(localTime % 50 == 0) 
-        {
-          if(parking) con.print(0,0, "max: %.1f, %.1f", maxPitch, pitch);
-          lastPitch = pitch;
-        }
-        localTime += 5;
-        delay(5);
-
       }
     }
 };
