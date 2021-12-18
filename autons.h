@@ -15,7 +15,6 @@ void rotateTo(double degrees, int timeout = 5000, double speedM  = .9) { ch.rota
 
 void redElevatedLong()
 {
-	/*
 	ch.spinTo(700,127);
 	frontPneu.toggle();
 	frontGoals = 1;
@@ -34,8 +33,6 @@ void redElevatedLong()
 	backPneu.toggle();
 	delay(200);
 	drive(400);
-	*/
-	ch.park();
 }
 
 void redElevatedShort()
@@ -94,12 +91,35 @@ void redDeElevatedLong()
 
 void redDeElevatedShort()
 {
-
+	drive(130);
+	drive(25, 350);
+	frontPneu.toggle();
+	delay(200);
+	frontPneu.toggle();
+	drive(-150);
 }
 
-void redBoth()
+void redBoth() // 10/11
 {
-	ch.park();
+	drive(200, 1500);
+	frontPneu.toggle();
+	frontLift.move_absolute(-3000, -127);
+	frontGoals = 1;
+	drive(-200, 1400);
+	rotateTo(-90, 2000, 1.1);
+	drive(230, 2000);
+	rotateTo(-179, 1400);
+	drive(-1500, 4000, 0.8);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-166, 1400);
+	drive(-190, 1300, 0.4);
+	drive(220, 1000);
+	backLift.move_absolute(-3000, -127);
+	rotateTo(-180, 1200);
+	drive(-300, 1500);
+	backLift.move_absolute(-1800, 127);
+	delay(300);
+	drive(340);
 }
 
 void blueElevatedLong()
@@ -169,7 +189,22 @@ void blueDeElevatedShort()
 
 void blueBoth()
 {
-
+	drive(150, 1500);
+	drive(-150, 800);
+	rotateTo(-90, 1600);
+	drive(175, 2000);
+	rotateTo(-179, 1400);
+	drive(-755, 4000, 0.73);
+	backLift.move_absolute(-2160, -127);
+	rotateTo(-160, 900);
+	delay(400);
+	drive(-90, 1300, 0.4);
+	drive(100, 1000);
+	backLift.move_absolute(-2750, -127);
+	drive(-200, 1500);
+	backLift.move_absolute(-1800, 127);
+	delay(300);
+	drive(210);
 }
 
 void neutralRush()
