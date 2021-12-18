@@ -410,6 +410,9 @@ public:
     void park()
     {
       bool parking = false;
+      int parkingStartTime = 10000000;
+      int localTime = 0;
+      double parkingConstant = 21;
       while(true)
       {
         backLift.move(25);
@@ -417,27 +420,39 @@ public:
 
         if(abs(inert.get_pitch() > 21))
         {
+          if(!parking) parkingStartTime = localTime;
           parking = true;
         }
 
         if(abs(inert.get_pitch()) < 15 && !parking)
         {
-          spinLeft(127);
-          spinRight(127);
+          spinLeft(110);
+          spinRight(110);
         }
 
-        else if(abs(inert.get_pitch()) < 21 && parking)
+        else if(parking && localTime - parkingStartTime == 1000) parkingConstant = abs(inert.get_pitch());
+
+        else if(abs(inert.get_pitch()) < parkingConstant - 0.77 && parking && localTime - parkingStartTime > 1000)
         {
-          drive(-140, 2000, 1.6);
+          drive(-100, 2000, 3.5);
           stop();
-          changeBrake(HOLD);
           backLift.move(0);
           frontLift.move(0);
+          delay(200);
           while(true)
           {
-            continue;
+            changeBrake(S_HOLD, 0, 2.5);
           }
         }
+
+
+        if(localTime % 50 == 0)
+        {
+          if(parking) con.print(0,0,"t: %.1f", parkingConstant);
+        }
+
+        delay(5);
+        localTime += 5;
       }
     }
 };
