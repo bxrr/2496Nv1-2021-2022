@@ -264,13 +264,9 @@ void skills()
 	drive(-300, 1500);
 	rotateTo(180, 2000);
 	frontLift.move_absolute(-4200, -127);
-	drive(1050, 3100, 0.8);
+	drive(1065, 3100, 0.8);
 	drive(-80, 800);
 	rotateTo(90,2000, 1.05);
-	backLift.move_absolute(-3000, -127);
-	drive(-140, 1000);
-	drive(120, 1000);
-	backLift.move_absolute(-400, 127);
 	drive(250, 1000);
 	frontLift.move_absolute(-2000, -127);
 	frontGoals = 2;

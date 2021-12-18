@@ -426,19 +426,18 @@ public:
 
         if(abs(inert.get_pitch()) < 15 && !parking)
         {
-          spinLeft(110);
-          spinRight(110);
+          spinLeft(115);
+          spinRight(115);
         }
 
         else if(parking && localTime - parkingStartTime == 1000) parkingConstant = abs(inert.get_pitch());
 
-        else if(abs(inert.get_pitch()) < parkingConstant - 0.77 && parking && localTime - parkingStartTime > 1000)
+        else if(abs(inert.get_pitch()) < parkingConstant - 0.8 && parking && localTime - parkingStartTime > 1000)
         {
-          drive(-100, 2000, 3.5);
+          //drive(-100, 2000, 3.5);
           stop();
           backLift.move(0);
           frontLift.move(0);
-          delay(200);
           while(true)
           {
             changeBrake(S_HOLD, 0, 2.5);
