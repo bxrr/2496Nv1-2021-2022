@@ -53,7 +53,7 @@ void autonSelector()
 		else if (autonType == 3){con.set_text(1,0, "De-elevated Long      ");}
 		else if (autonType == 4){con.set_text(1,0, "De-elevated short     ");}
 		else if (autonType == 5) {con.set_text(1,0, "Both               ");}
-		else if (autonType == 6) {con.set_text(1,0, "Rush Neutral       ");}
+		else if (autonType == 6) {con.set_text(1,0, "Just for J       ");}
 		else if (autonType == 7){con.set_text(1,0, "Skills               ");}
 		else if(autonType == 8) {con.set_text(1,0, "None                  ");}
 	}

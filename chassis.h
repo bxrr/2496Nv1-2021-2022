@@ -187,7 +187,7 @@ public:
 
     void spinTo(double enc, int speed, int brakeType = 1, double timeout = 4000)
     {
-      if(enc < 0) speed = -speed;
+      if(enc < 0) speed = speed > 0 ? -speed : speed;
       reset();
       int timer = 0;
       changeBrake(brakeType == 1 ? COAST : HOLD);
@@ -426,8 +426,8 @@ public:
 
         if(abs(inert.get_pitch()) < 15 && !parking)
         {
-          spinLeft(115);
-          spinRight(115);
+          spinLeft(118);
+          spinRight(118);
         }
 
         else if(parking && localTime - parkingStartTime == 1000) parkingConstant = abs(inert.get_pitch());

@@ -20,6 +20,7 @@ void redElevatedLong()
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
 	ch.spinTo(-700, -127);
+	/*
 	ch.spinTo(-500, -50, 1, 1500);
 	drive(450, 2000);
 	rotateTo(-90);
@@ -33,6 +34,7 @@ void redElevatedLong()
 	backPneu.toggle();
 	delay(200);
 	drive(400);
+	*/
 }
 
 void redElevatedShort()
@@ -41,18 +43,22 @@ void redElevatedShort()
 	frontPneu.toggle();
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
-	drive(-655, 2500, 1, 80);
+	drive(-300, 1500);
+	rotateTo(0, 800);
+	drive(-350, 2500, 1, 20);
 	frontPneu.toggle();
 	drive(-250);
-	rotateTo(-39, 1200);
+	rotateTo(-40, 1000);
 	frontLift.move_absolute(0, -127);
-	drive(1000, 2000, 1, 50);
+	drive(800, 1200, 1, 50);
+	drive(370, 800, 1);
 	frontPneu.toggle();
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
-	drive(-1000);
+	drive(-1000, 2000);
 	backLift.move_absolute(-3000, -127);
-	rotateTo(-135, 1400);
+	rotateTo(-110, 1400);
+	delay(300);
 	drive(-400, 1500);
 	backLift.move_absolute(-1000, 127);
 	delay(200);
@@ -64,12 +70,13 @@ void redElevatedShort()
 
 void redDeElevatedLong()
 {
-	ch.spinTo(760,127);
+	ch.spinTo(830,127);
 	frontPneu.toggle();
 	frontGoals = 1;
 	frontLift.move_absolute(-800, -127);
 	ch.spinTo(-800, -127);
 	ch.stop();
+	/*
 	rotateTo(-20);
 	ch.spinTo(-400, -50, 1, 1500);
 	drive(165, 2000);
@@ -79,13 +86,15 @@ void redDeElevatedLong()
 	drive(-100, 1500);
 	delay(500);
 	drive(300);
-	*/
+	
 	rotateTo(-81, 2000);
 	backLift.move_absolute(-3000, -127);
 	drive(150, 1500);
 	drive(-500, 1500);
 	backLift.move_absolute(-1000, 127);
 	delay(500);
+	*/
+	
 
 }
 
@@ -101,21 +110,21 @@ void redDeElevatedShort()
 
 void redBoth() // 10/11
 {
-	drive(200, 1500);
+	drive(100, 1500);
 	frontPneu.toggle();
-	frontLift.move_absolute(-3000, -127);
+	delay(200);
+	frontLift.move_absolute(-1000, -127);
 	frontGoals = 1;
 	drive(-200, 1400);
 	rotateTo(-90, 2000, 1.1);
-	drive(230, 2000);
-	rotateTo(-179, 1400);
-	drive(-1500, 4000, 0.8);
-	backLift.move_absolute(-2160, -127);
-	rotateTo(-166, 1400);
+	drive(300, 2000);
+	rotateTo(-179, 2000);
+
+	drive(-1500, 4000, 0.7);
+	backLift.move_absolute(-2300, -127);
 	drive(-190, 1300, 0.4);
 	drive(220, 1000);
 	backLift.move_absolute(-3000, -127);
-	rotateTo(-180, 1200);
 	drive(-300, 1500);
 	backLift.move_absolute(-1800, 127);
 	delay(300);
@@ -209,10 +218,23 @@ void blueBoth()
 
 void neutralRush()
 {
+	/*
 	ch.spinTo(760,127);
 	frontPneu.toggle();
 	frontLift.move_absolute(-600, -127);
 	drive(-700);
+	*/
+	backLift.move_absolute(-3000, -127);
+	ch.spinTo(700,127);
+	frontPneu.toggle();
+	frontGoals = 1;
+	frontLift.move_absolute(-800, -127);
+	rotateTo(80, 1000, 1.2);
+	drive(-500, 1200, 1.2);
+	backLift.move_absolute(100, 127);
+	delay(300);
+	rotateTo(-30, 1500);
+	drive(-800);
 }
 
 
